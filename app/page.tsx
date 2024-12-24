@@ -1,101 +1,478 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../app/lib/firebase-config";
+
+export default function SignIn() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    // If the user is already logged in, redirect to the dashboard
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        router.push("/dashboard");
+      }
+    });
+
+    return () => unsubscribe(); // Clean up the listener on component unmount
+  }, [router]);
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      alert("Sign-in successful!");
+      router.push("/dashboard"); // Redirect to the dashboard after successful login
+    } catch (err) {
+      setError("Failed to sign in. Please check your credentials.");
+      console.error("Sign-in error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <form
+        onSubmit={handleSignIn}
+        className="bg-white p-8 rounded shadow-md w-80"
+      >
+        <h1 className="text-xl font-bold mb-4">Sign In</h1>
+        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+        <div className="mb-4">
+          <label className="block text-gray-700">Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded"
+            required
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        <div className="mb-4">
+          <label className="block text-gray-700">Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded"
+            required
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          {loading ? "Signing in..." : "Sign In"}
+        </button>
+      </form>
     </div>
   );
 }
+
+
+// "use client";
+// // pages/index.tsx
+// import { useState, useEffect } from "react";
+// import { firestore } from "../app/lib/firebase-config";
+// import { collection, addDoc, getDocs, updateDoc, doc, deleteDoc } from "firebase/firestore";
+
+// interface Category {
+//   id: string;
+//   name: string;
+// }
+
+// const Home = () => {
+//   const [categoryName, setCategoryName] = useState("");
+//   const [categories, setCategories] = useState<Category[]>([]);
+//   const [categoryError, setCategoryError] = useState("");
+
+//   // Fetch categories from Firestore
+//   const fetchCategories = async () => {
+//     try {
+//       const querySnapshot = await getDocs(collection(firestore, "category"));
+//       const fetchedCategories = querySnapshot.docs.map((doc) => ({
+//         id: doc.id,
+//         name: doc.data().name,
+//       }));
+//       setCategories(fetchedCategories);
+//     } catch (error) {
+//       console.error("Error fetching categories:", error);
+//       setCategoryError("Failed to fetch categories.");
+//     }
+//   };
+
+//   // Add a new category
+//   const addCategory = async () => {
+//     if (!categoryName.trim()) {
+//       setCategoryError("Category name cannot be empty.");
+//       return;
+//     }
+
+//     try {
+//       await addDoc(collection(firestore, "category"), {
+//         name: categoryName,
+//       });
+//       setCategoryName("");
+//       setCategoryError("");
+//       fetchCategories();
+//     } catch (error) {
+//       console.error("Error adding category:", error);
+//       setCategoryError("Failed to add category.");
+//     }
+//   };
+
+//   // Update category
+//   const updateCategory = async (categoryId: string, newCategoryName: string) => {
+//     try {
+//       const categoryRef = doc(firestore, "category", categoryId);
+//       await updateDoc(categoryRef, {
+//         name: newCategoryName,
+//       });
+//       fetchCategories();
+//     } catch (error) {
+//       console.error("Error updating category:", error);
+//       setCategoryError("Failed to update category.");
+//     }
+//   };
+
+//   // Delete category
+//   const deleteCategory = async (categoryId: string) => {
+//     try {
+//       const categoryRef = doc(firestore, "category", categoryId);
+//       await deleteDoc(categoryRef);
+//       fetchCategories();
+//     } catch (error) {
+//       console.error("Error deleting category:", error);
+//       setCategoryError("Failed to delete category.");
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchCategories();
+//   }, []);
+
+//   return (
+//     <div>
+//       <h1>Home - Categories</h1>
+
+//       {/* Add Category Form */}
+//       <div>
+//         <input
+//           type="text"
+//           value={categoryName}
+//           onChange={(e) => setCategoryName(e.target.value)}
+//           placeholder="Category Name"
+//         />
+//         <button onClick={addCategory}>Add Category</button>
+//       </div>
+
+//       {categoryError && <p style={{ color: "red" }}>{categoryError}</p>}
+
+//       {/* Category Table */}
+//       <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "20px" }}>
+//         <thead>
+//           <tr>
+//             <th style={{ border: "1px solid #ddd", padding: "8px" }}>Category Name</th>
+//             <th style={{ border: "1px solid #ddd", padding: "8px" }}>Actions</th>
+//           </tr>
+//         </thead>
+//         <tbody>
+//           {categories.map((category) => (
+//             <tr key={category.id}>
+//               <td style={{ border: "1px solid #ddd", padding: "8px" }}>{category.name}</td>
+//               <td style={{ border: "1px solid #ddd", padding: "8px" }}>
+//                 <button
+//                   onClick={() => updateCategory(category.id, "Updated Category Name")}
+//                   style={{ marginRight: "10px" }}
+//                 >
+//                   Update
+//                 </button>
+//                 <button onClick={() => deleteCategory(category.id)}>Delete</button>
+//               </td>
+//             </tr>
+//           ))}
+//         </tbody>
+//       </table>
+//     </div>
+//   );
+// };
+
+// export default Home;
+
+
+
+
+
+
+
+
+
+// // 'use client';
+
+// // import { useState } from 'react';
+// // import { auth, firestore } from '../lib/firebase-config';  // Adjust import as per your setup
+// // import { signInWithEmailAndPassword, UserCredential } from 'firebase/auth';
+// // import { doc, setDoc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+
+// // // Define a type for the category document structure
+// // interface CategoryDocument {
+// //   name: string;
+// //   description: string;
+// // }
+
+// // interface FormState {
+// //   email: string;
+// //   password: string;
+// //   categoryName: string;
+// //   categoryDescription: string;
+// // }
+
+// // const Home = () => {
+// //   const [formState, setFormState] = useState<FormState>({
+// //     email: '',
+// //     password: '',
+// //     categoryName: '',
+// //     categoryDescription: '',
+// //   });
+
+// //   const [user, setUser] = useState<UserCredential | null>(null);
+// //   const [loginError, setLoginError] = useState<string>('');
+// //   const [categoryError, setCategoryError] = useState<string>('');
+// //   const [fetchedCategory, setFetchedCategory] = useState<CategoryDocument | null>(null);  // Specify type for fetched category
+
+// //   // Handle login form submission
+// //   const handleLogin = async (e: React.FormEvent) => {
+// //     e.preventDefault();
+// //     try {
+// //       const userCredential = await signInWithEmailAndPassword(auth, formState.email, formState.password);
+// //       setUser(userCredential);
+// //       setLoginError('');
+// //       console.log('Logged in user:', userCredential.user);
+
+// //       // After login, fetch user-specific category data
+// //       await fetchCategoryData(userCredential.user.uid);
+// //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// //     } catch (error: any) {
+// //       setLoginError(error.message);
+// //     }
+// //   };
+
+// //   // Fetch category data from Firestore using the UID
+// //   const fetchCategoryData = async (uid: string) => {
+// //     try {
+// //       const docRef = doc(firestore, 'categories', uid);  // Use UID to fetch the category document
+// //       const docSnap = await getDoc(docRef);
+// //       if (docSnap.exists()) {
+// //         // Use the CategoryDocument type for the fetched data
+// //         const docData = docSnap.data() as CategoryDocument;
+// //         setFetchedCategory(docData);  // Update state with typed category data
+// //         console.log('Fetched Category Data:', docData);
+// //       } else {
+// //         console.log('No such category document!');
+// //       }
+// //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// //     } catch (error: any) {
+// //       setCategoryError(error.message);
+// //     }
+// //   };
+
+// //   // Handle Firestore category creation
+// //   const handleAddCategory = async (e: React.FormEvent) => {
+// //     e.preventDefault();
+// //     if (!user) {
+// //       setCategoryError('You must be logged in to add a category.');
+// //       return;
+// //     }
+
+// //     try {
+// //       // Create a new category or overwrite an existing one
+// //       await setDoc(doc(firestore, 'categories', user.user.uid), {
+// //         name: formState.categoryName,
+// //         description: formState.categoryDescription,
+// //       });
+// //       setCategoryError('');
+// //       console.log('Category successfully added!');
+// //       // After adding the category, fetch it to update the fetched data
+// //       await fetchCategoryData(user.user.uid);
+// //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// //     } catch (error: any) {
+// //       setCategoryError(error.message);
+// //     }
+// //   };
+
+// //   // Handle category update
+// //   const handleUpdateCategory = async (e: React.FormEvent) => {
+// //     e.preventDefault();
+// //     if (!user) {
+// //       setCategoryError('You must be logged in to update a category.');
+// //       return;
+// //     }
+
+// //     try {
+// //       // Update the category with new values
+// //       const docRef = doc(firestore, 'categories', user.user.uid);
+// //       await updateDoc(docRef, {
+// //         name: formState.categoryName,
+// //         description: formState.categoryDescription,
+// //       });
+// //       setCategoryError('');
+// //       console.log('Category successfully updated!');
+// //       // Fetch the updated category
+// //       await fetchCategoryData(user.user.uid);
+// //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// //     } catch (error: any) {
+// //       setCategoryError(error.message);
+// //     }
+// //   };
+
+// //   // Handle category deletion
+// //   const handleDeleteCategory = async () => {
+// //     if (!user) {
+// //       setCategoryError('You must be logged in to delete a category.');
+// //       return;
+// //     }
+
+// //     try {
+// //       // Delete the category document from Firestore
+// //       const docRef = doc(firestore, 'categories', user.user.uid);
+// //       await deleteDoc(docRef);
+// //       setCategoryError('');
+// //       setFetchedCategory(null);  // Clear fetched category data after deletion
+// //       console.log('Category successfully deleted!');
+// //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// //     } catch (error: any) {
+// //       setCategoryError(error.message);
+// //     }
+// //   };
+
+// //   // Handle form state change
+// //   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+// //     const { name, value } = e.target;
+// //     setFormState((prevState) => ({
+// //       ...prevState,
+// //       [name]: value,
+// //     }));
+// //   };
+
+// //   return (
+// //     <div>
+// //       <h1>Next.js Firebase Auth and Firestore</h1>
+
+// //       <div>
+// //         <h2>Login Form</h2>
+// //         <form onSubmit={handleLogin}>
+// //           <div>
+// //             <label>Email</label>
+// //             <input
+// //               type="email"
+// //               name="email"
+// //               value={formState.email}
+// //               onChange={handleChange}
+// //               required
+// //             />
+// //           </div>
+// //           <div>
+// //             <label>Password</label>
+// //             <input
+// //               type="password"
+// //               name="password"
+// //               value={formState.password}
+// //               onChange={handleChange}
+// //               required
+// //             />
+// //           </div>
+// //           <button type="submit">Login</button>
+// //         </form>
+
+// //         {loginError && <p style={{ color: 'red' }}>Error: {loginError}</p>}
+// //         {user && <p>Welcome, {user.user.email}</p>}
+// //       </div>
+
+// //       <div>
+// //         <h2>Add Category</h2>
+// //         <form onSubmit={handleAddCategory}>
+// //           <div>
+// //             <label>Category Name</label>
+// //             <input
+// //               type="text"
+// //               name="categoryName"
+// //               value={formState.categoryName}
+// //               onChange={handleChange}
+// //               required
+// //             />
+// //           </div>
+// //           <div>
+// //             <label>Category Description</label>
+// //             <input
+// //               type="text"
+// //               name="categoryDescription"
+// //               value={formState.categoryDescription}
+// //               onChange={handleChange}
+// //               required
+// //             />
+// //           </div>
+// //           <button type="submit">Add Category</button>
+// //         </form>
+
+// //         {categoryError && <p style={{ color: 'red' }}>Error: {categoryError}</p>}
+// //       </div>
+
+// //       <div>
+// //         <h2>Update Category</h2>
+// //         <form onSubmit={handleUpdateCategory}>
+// //           <div>
+// //             <label>Category Name</label>
+// //             <input
+// //               type="text"
+// //               name="categoryName"
+// //               value={formState.categoryName}
+// //               onChange={handleChange}
+// //               required
+// //             />
+// //           </div>
+// //           <div>
+// //             <label>Category Description</label>
+// //             <input
+// //               type="text"
+// //               name="categoryDescription"
+// //               value={formState.categoryDescription}
+// //               onChange={handleChange}
+// //               required
+// //             />
+// //           </div>
+// //           <button type="submit">Update Category</button>
+// //         </form>
+// //       </div>
+
+// //       <div>
+// //         <h2>Delete Category</h2>
+// //         <button onClick={handleDeleteCategory}>Delete Category</button>
+// //       </div>
+
+// //       <div>
+// //         <h2>Fetched Category Data</h2>
+// //         {fetchedCategory ? (
+// //           <div>
+// //             <p><strong>Category Name:</strong> {fetchedCategory.name}</p>
+// //             <p><strong>Category Description:</strong> {fetchedCategory.description}</p>
+// //           </div>
+// //         ) : (
+// //           <p>No category data fetched yet</p>
+// //         )}
+// //       </div>
+// //     </div>
+// //   );
+// // };
+
+// // export default Home;

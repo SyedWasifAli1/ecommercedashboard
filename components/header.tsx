@@ -1,0 +1,96 @@
+"use client";
+import React from 'react';
+import { FiSearch, FiBell, FiUser } from 'react-icons/fi';
+import { usePathname } from 'next/navigation';
+
+const Header: React.FC = () => {
+  const pathname = usePathname();
+
+  // Format the current route for display, replacing slashes with hyphens
+  const routeTitle =
+    pathname === '/' ? 'Dashboard' : pathname.replace(/\//g, '/').replace("/", '');
+
+  return (
+    <header className="bg-white shadow-md p-4 flex justify-between items-center">
+      {/* Dynamic Route Title with Split Styling */}
+      <h1 className="text-xl font-bold capitalize">
+        <span className="text-black">{routeTitle}</span>
+      </h1>
+
+      {/* Search Bar and Other Actions */}
+      <div className="flex items-center gap-2">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search..."
+            className="w-64 px-4 py-2 border rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <FiSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+        </div>
+
+        {/* Notifications */}
+        <button className="p-2 rounded-full hover:bg-gray-100">
+          <FiBell className="text-gray-600" size={20} />
+        </button>
+
+        {/* User Profile */}
+        <button className="p-2 rounded-full hover:bg-gray-100 flex items-center">
+          <FiUser className="text-gray-600" size={20} />
+          <span className="ml-2 hidden md:block text-gray-600">Profile</span>
+        </button>
+      </div>
+    </header>
+  );
+};
+
+export default Header;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import React from 'react';
+// import { FiSearch, FiBell, FiUser } from 'react-icons/fi';
+
+// const Header: React.FC = () => {
+//   return (
+//     <header className="bg-white shadow-md p-4 flex justify-between items-center">
+//       {/* Logo or Title */}
+//       <h1 className="text-xl font-bold text-gray-800">Dashboard</h1>
+
+//       {/* Search Bar */}
+//       <div className="flex items-center gap-2">
+//         <div className="relative">
+//           <input
+//             type="text"
+//             placeholder="Search..."
+//             className="w-64 px-4 py-2 border rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+//           />
+//           <FiSearch className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+//         </div>
+
+//         {/* Notifications */}
+//         <button className="p-2 rounded-full hover:bg-gray-100">
+//           <FiBell className="text-gray-600" size={20} />
+//         </button>
+
+//         {/* User Profile */}
+//         <button className="p-2 rounded-full hover:bg-gray-100 flex items-center">
+//           <FiUser className="text-gray-600" size={20} />
+//           <span className="ml-2 hidden md:block text-gray-600">Profile</span>
+//         </button>
+//       </div>
+//     </header>
+//   );
+// };
+
+// export default Header;
