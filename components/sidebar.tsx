@@ -12,7 +12,7 @@ const Sidebar: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth); // Sign out the user from Firebase
+      await signOut(auth); // Sign out the user from Firebases
       alert('You have been logged out!');
       router.push('/'); // Redirect to login page (or wherever you want to redirect the user)
     } catch (error) {
