@@ -33,30 +33,57 @@ const Sidebar: React.FC = () => {
       {/* Navigation Links */}
       <nav className="flex-grow">
         <ul>
-          <li className="p-4 hover:bg-gray-700 flex items-center">
+          {/* <li className="p-4 hover:bg-gray-700 flex items-center">
             <FiHome size={20} className="mr-2" />
             {isOpen && 'Dashboard'}
+          </li> */}
+          <li className="p-4 hover:bg-gray-700 flex items-center cursor-pointer">
+            <Link href="/dashboard/" className="flex items-center w-full">
+              <FiHome size={20} className="mr-2" />
+              {isOpen && 'Dashboard'}
+            </Link>
           </li>
           <li className="p-4 hover:bg-gray-700 flex items-center cursor-pointer">
-  <Link href="/dashboard/products" className="flex items-center w-full">
-    <FiBox size={20} className="mr-2" />
-    {isOpen && 'Products'}
-  </Link>
-</li>
+            <Link href="/dashboard/add_product" className="flex items-center w-full">
+              <FiBox size={20} className="mr-2" />
+              {isOpen && 'Add Products'}
+            </Link>
+          </li>
+          <li className="p-4 hover:bg-gray-700 flex items-center cursor-pointer">
+            <Link href="/dashboard/products" className="flex items-center w-full">
+              <FiBox size={20} className="mr-2" />
+              {isOpen && 'Products List'}
+            </Link>
+          </li>
+          <li className="p-4 hover:bg-gray-700 flex items-center cursor-pointer">
+            <Link href="/dashboard/Users" className="flex items-center w-full">
+              <FiBox size={20} className="mr-2" />
+              {isOpen && ' List of Users'}
+            </Link>
+          </li>
+          
           <li className="p-4 hover:bg-gray-700 flex items-center">
-  <Link href="/dashboard/orders" className="flex items-center w-full">
+            <Link href="/dashboard/order" className="flex items-center w-full">
 
-            <FiList size={20} className="mr-2" />
-            {isOpen && 'Orders'}
-  </Link>
+              <FiList size={20} className="mr-2" />
+              {isOpen && 'Orders'}
+            </Link>
 
           </li>
           <li className="p-4 hover:bg-gray-700 flex items-center">
-  <Link href="/dashboard/categories" className="flex items-center w-full">
+            <Link href="/dashboard/categories" className="flex items-center w-full">
 
-            <FiList size={20} className="mr-2" />
-            {isOpen && 'Categories'}
-  </Link>
+              <FiList size={20} className="mr-2" />
+              {isOpen && 'Categories'}
+            </Link>
+
+          </li>
+          <li className="p-4 hover:bg-gray-700 flex items-center">
+            <Link href="/dashboard/slider" className="flex items-center w-full">
+
+              <FiList size={20} className="mr-2" />
+              {isOpen && 'Slider'}
+            </Link>
 
           </li>
           <li className="p-4 hover:bg-gray-700 flex items-center">
@@ -67,13 +94,13 @@ const Sidebar: React.FC = () => {
       </nav>
 
       {/* Logout Button */}
-      <button 
-      onClick={handleLogout}
-      className="p-4 hover:bg-gray-700 flex items-center"
-    >
-      <FiLogOut size={20} className="mr-2" />
-      {isOpen && 'Logout'}
-    </button>
+      <button
+        onClick={handleLogout}
+        className="p-4 hover:bg-gray-700 flex items-center"
+      >
+        <FiLogOut size={20} className="mr-2" />
+        {isOpen && 'Logout'}
+      </button>
     </div>
   );
 };
