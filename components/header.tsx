@@ -7,8 +7,7 @@ const Header: React.FC = () => {
   const pathname = usePathname();
 
   // Format the current route for display, replacing slashes with hyphens
-  const routeTitle =
-    pathname === '/' ? 'Dashboard' : pathname.replace(/\//g, '/').replace("/", '');
+  const routeTitle = pathname === null ? 'Default Title' : (pathname === '/' ? 'Dashboard' : pathname.replace(/\//g, '/').replace("/", ''));
 
   return (
     <header className="bg-white shadow-md p-4 flex justify-between items-center">
