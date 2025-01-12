@@ -1,18 +1,20 @@
-// import admin from "firebase-admin";
-// import path from "path";
+import admin from "firebase-admin";
+import path from "path";
 
-// if (!admin.apps.length) {
-//   admin.initializeApp({
-//     credential: admin.credential.cert(
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(
         
-//       path.resolve(process.cwd(), "config/authwithfirebase-20a41-firebase-adminsdk-2s6ag-5c95b2c3fd.json") as admin.ServiceAccount
-//     //   path.resolve(process.cwd(), "config/service-account-key.json") as admin.ServiceAccount
-//     ),
-//     databaseURL: "https://authwithfirebase-20a41-default-rtdb.firebaseio.com",
-//   });
-// }
+      path.resolve(process.cwd(), "config/authwithfirebase-20a41-firebase-adminsdk-2s6ag-5c95b2c3fd.json") as admin.ServiceAccount
+    //   path.resolve(process.cwd(), "config/service-account-key.json") as admin.ServiceAccount
+    ),
+    databaseURL: "https://authwithfirebase-20a41-default-rtdb.firebaseio.com",
+  });
+}
 
-// export default admin;
+export default admin;
+
+
 
 
 // // import { initializeApp, cert, getApps } from 'firebase-admin/app';
