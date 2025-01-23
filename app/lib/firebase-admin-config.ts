@@ -7,12 +7,11 @@ dotenv.config();
 if (!admin.apps.length) {
   const serviceAccountPath = path.resolve(
     process.cwd(),
-    process.env.GOOGLE_APPLICATION_CREDENTIALS || "config/authwithfirebase-20a41-firebase-adminsdk-2s6ag-5c95b2c3fd.json" // Default path if env is not set
-  );
+    process.env.GOOGLE_APPLICATION_CREDENTIALS!);
 
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccountPath as admin.ServiceAccount),
-    databaseURL: process.env.FIREBASE_DATABASE_URL || "https://authwithfirebase-20a41-default-rtdb.firebaseio.com",
+    databaseURL: process.env.FIREBASE_DATABASE_URL ,
   });
 }
 
