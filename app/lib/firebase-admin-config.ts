@@ -1,18 +1,22 @@
 import admin from "firebase-admin";
 import path from "path";
+import dotenv from "dotenv";
+// Load environment variables
+dotenv.config();
 
 if (!admin.apps.length) {
+  const serviceAccountPath = path.resolve(
+    process.cwd(),
+    process.env.GOOGLE_APPLICATION_CREDENTIALS!);
+
   admin.initializeApp({
-    credential: admin.credential.cert(
-        
-      path.resolve(process.cwd(), "config/authwithfirebase-20a41-firebase-adminsdk-2s6ag-5c95b2c3fd.json") as admin.ServiceAccount
-    //   path.resolve(process.cwd(), "config/service-account-key.json") as admin.ServiceAccount
-    ),
-    databaseURL: "https://authwithfirebase-20a41-default-rtdb.firebaseio.com",
+    credential: admin.credential.cert(serviceAccountPath as admin.ServiceAccount),
+    databaseURL: process.env.FIREBASE_DATABASE_URL ,
   });
 }
 
 export default admin;
+
 
 
 

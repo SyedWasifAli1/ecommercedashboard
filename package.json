@@ -10,6 +10,7 @@
     "export": "next export"
   },
   "dependencies": {
+    "dotenv": "^16.4.7",
     "firebase": "^11.1.0",
     "firebase-admin": "^13.0.2",
     "next": "15.1.1",
