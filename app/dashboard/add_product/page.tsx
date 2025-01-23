@@ -112,7 +112,7 @@
       try {
         const productData = {
           sku,
-          name,
+          name: name.toLowerCase(),
           price: parseFloat(price),
           weight: parseFloat(weight),
           description,

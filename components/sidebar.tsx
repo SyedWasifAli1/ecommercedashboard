@@ -78,6 +78,16 @@ const Sidebar: React.FC = () => {
             </Link>
 
           </li>
+
+          <li className="p-4 hover:bg-gray-700 flex items-center">
+            <Link href="/dashboard/dealstore" className="flex items-center w-full">
+
+              <FiList size={20} className="mr-2" />
+              {isOpen && 'Deal Store'}
+            </Link>
+
+          </li>
+          
           <li className="p-4 hover:bg-gray-700 flex items-center">
             <Link href="/dashboard/slider" className="flex items-center w-full">
 

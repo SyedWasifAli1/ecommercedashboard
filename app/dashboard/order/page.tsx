@@ -1,19 +1,23 @@
 "use client";
+import Image from 'next/image';
 import { useEffect, useState } from "react";
 import {
-  // collection,
+  collection,
   getDocs,
   query,
   collectionGroup,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { firestore } from "../../lib/firebase-config";
+import { FiPrinter } from "react-icons/fi";
 
 interface Product {
   id: string;
   name: string;
   price: number;
   quantity: number;
+  images1: string[];
 }
 
 interface DeliveryDetails {
@@ -54,12 +58,13 @@ export default function Orders() {
       return users.reduce((map: Record<string, string>, user: { uid: string; email: string }) => {
         map[user.uid] = user.email || "No Email";
         return map;
-      }, {});
+      }, {}); 
     } catch (error) {
       console.error("Error fetching emails:", error);
       return {};
     }
   };
+  
 
   // Fetch orders and match emails with user IDs
   useEffect(() => {
@@ -100,10 +105,48 @@ export default function Orders() {
     fetchOrders();
   }, []);
 
-  const handleShowItems = (products: Product[]) => {
-    setSelectedItems(products);
+ 
+  const setSelectedproducts = async (productsWithQuantities: { id: string; quantity: number }[]) => {
+    try {
+      if (productsWithQuantities.length === 0) {
+        console.error("No product IDs provided");
+        return;
+      }
+  
+      const productsRef = collection(firestore, "products");
+      const productIds = productsWithQuantities.map((p) => p.id);
+      const querySnapshot = await getDocs(query(productsRef, where("__name__", "in", productIds)));
+  
+      const products: Product[] = querySnapshot.docs.map((doc) => {
+        const productData = doc.data() as Product;
+        const quantity = productsWithQuantities.find((p) => p.id === doc.id)?.quantity || 0;
+  
+        return {
+          id: doc.id,
+          name: productData.name,
+          price: productData.price,
+          quantity, // Include quantity from `user_orders`
+          images1: productData.images1,
+        };
+      });
+  
+      setSelectedItems(products);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
   };
+  
 
+    const handleShowItems = (order: Order) => {
+      const productIdsWithQuantities = order.products.map((product) => ({
+        id: product.id,
+        quantity: product.quantity,
+      }));
+      setSelectedproducts(productIdsWithQuantities);
+    };
+    
+
+  // Handle showing delivery details
   const handleShowDeliveryDetails = (deliveryDetails: DeliveryDetails) => {
     setSelectedDelivery(deliveryDetails);
   };
@@ -112,13 +155,25 @@ export default function Orders() {
     setSelectedItems([]);
     setSelectedDelivery(null);
   };
+  
+  
 
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
     try {
+      // Confirmation alert
+      const confirmUpdate = window.confirm(
+        `Are you sure you want to update the status to "${newStatus}"?`
+      );
+
+      if (!confirmUpdate) {
+        console.log("Status update cancelled by the user.");
+        return;
+      }
+
       // Adjust the path to locate the correct document in the "user_orders" collection
       const ordersCollectionRef = query(collectionGroup(firestore, "user_orders"));
       const querySnapshot = await getDocs(ordersCollectionRef);
-      const orderDocRef = querySnapshot.docs.find(doc => doc.id === orderId)?.ref;
+      const orderDocRef = querySnapshot.docs.find((doc) => doc.id === orderId)?.ref;
 
       if (!orderDocRef) {
         console.error("Order document not found for orderId:", orderId);
@@ -134,12 +189,129 @@ export default function Orders() {
           order.orderId === orderId ? { ...order, status: newStatus } : order
         )
       );
+
+      console.log("Status updated successfully.");
     } catch (error) {
       console.error("Error updating status:", error);
     }
   };
 
 
+
+
+
+
+  const handlePrintOrderSlip = (order: Order) => {
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <style>
+              body { 
+                font-family: Arial, sans-serif; 
+                line-height: 1.6; 
+                margin: 20px; 
+                padding: 20px; 
+              }
+              h1 { 
+                text-align: center; 
+                padding-bottom: 20px; 
+              }
+              table { 
+                width: 100%; 
+                border-collapse: collapse; 
+                margin: 20px 0; 
+              }
+              th, td { 
+                border: 1px solid #ddd; 
+                padding: 12px; 
+                text-align: left; 
+              }
+              th { 
+                background-color: #f4f4f4; 
+              }
+              p { 
+                margin-bottom: 10px; 
+                font-size: 16px;
+              }
+              /* Style for the print button */
+              #printButton {
+                display: block;
+                margin-bottom: 20px;
+                padding: 10px 20px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                font-size: 16px;
+                cursor: pointer;
+              }
+              #printButton:hover {
+                background-color: #45a049;
+              }
+              @media print {
+                @page {
+                  margin: 0;
+                  size: auto;
+                }
+                body {
+                  margin: 50px;
+                  padding: 0;
+                }
+                header, footer, .no-print {
+                  display: none !important;
+                }
+                /* Hide the print button when printing */
+                #printButton {
+                  display: none;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            <!-- Print button -->
+            <button id="printButton" onclick="window.print();">Print Order Slip</button>
+  
+            <h1>Order Slip</h1>
+            <p><strong>Order ID:</strong> ${order.orderId}</p>
+            <p><strong>User Email:</strong> ${order.userEmail}</p>
+            <p><strong>Contact Number:</strong> ${order.contactNumber}</p>
+            <p><strong>Delivery Address:</strong> ${order.deliveryDetails.street}, ${order.deliveryDetails.city}, ${order.deliveryDetails.province}, ${order.deliveryDetails.country}</p>
+            <h2>Products</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Product Name</th>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${order.products
+                  .map(
+                    (product) => `
+                    <tr>
+                      <td>${product.name}</td>
+                      <td>Rs${product.price}</td>
+                      <td>${product.quantity}</td>
+                    </tr>
+                  `
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+            <p><strong>Total Price:</strong> Rs${order.totalPrice}</p>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+  printWindow.print();
+      // Trigger the print action
+      // printWindow.document.execCommand('print', false);
+    }
+  };
+
+  
   return (
     <div className="h-[80vh] bg-gray-900 text-gray-200 p-8">
       <h1 className="text-3xl font-bold mb-8">All Users Orders</h1>
@@ -153,7 +325,6 @@ export default function Orders() {
             <thead>
               <tr className="bg-gray-800">
                 <th className="border border-gray-700 px-4 py-2">Order ID</th>
-                {/* <th className="border border-gray-700 px-4 py-2">User ID</th> */}
                 <th className="border border-gray-700 px-4 py-2">User Email</th>
                 <th className="border border-gray-700 px-4 py-2">Contact</th>
                 <th className="border border-gray-700 px-4 py-2">City</th>
@@ -167,7 +338,6 @@ export default function Orders() {
               {orders.map((order) => (
                 <tr key={order.orderId} className="hover:bg-gray-800">
                   <td className="border border-gray-700 px-4 py-2">{order.orderId}</td>
-                  {/* <td className="border border-gray-700 px-4 py-2">{order.userId}</td> */}
                   <td className="border border-gray-700 px-4 py-2">{order.userEmail}</td>
                   <td className="border border-gray-700 px-4 py-2">{order.contactNumber}</td>
                   <td className="border border-gray-700 px-4 py-2">{order.city}</td>
@@ -183,21 +353,29 @@ export default function Orders() {
                       <option value="Cancelled">Cancelled</option>
                     </select>
                   </td>
-                  <td className="border border-gray-700 px-4 py-2">${order.totalPrice}</td>
+                  <td className="border border-gray-700 px-4 py-2">PKR:{order.totalPrice}</td>
                   <td className="border border-gray-700 px-4 py-2">{order.products.length}</td>
                   <td className="border border-gray-700 px-4 py-2 space-y-2">
                     <button
                       className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-                      onClick={() => handleShowItems(order.products)}
+                      onClick={() => handleShowItems(order)}
                     >
-                      Show Items
+                      View Items
                     </button>
                     <button
                       className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
                       onClick={() => handleShowDeliveryDetails(order.deliveryDetails)}
                     >
-                      Delivery Details
+                      View Delivery
                     </button>
+
+                    <button
+                      className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded"
+                      onClick={() => handlePrintOrderSlip(order)}
+                    >
+                        <FiPrinter size={20} style={{ marginRight: "5px" }} />
+                    </button>
+                   
                   </td>
                 </tr>
               ))}
@@ -206,52 +384,108 @@ export default function Orders() {
         </div>
       )}
 
-      {/* Modal for Order Items */}
+      {/* Modal for displaying items */}
+    
+      {/* Modal for displaying product details */}
       {selectedItems.length > 0 && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-gray-800 text-gray-200 rounded-lg shadow-lg p-6 w-[90%] md:w-[50%]">
-            <h2 className="text-xl font-bold mb-4">Order Items</h2>
-            <ul className="list-disc ml-6 space-y-2">
-              {selectedItems.map((item) => (
-                <li key={item.id}>
-                  <strong>{item.name}</strong> - ${item.price} x {item.quantity}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-6 text-right">
-              <button
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
-                onClick={handleCloseModal}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+  <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+  <div className="bg-gray-900 p-12 rounded-lg max-w-4xl w-full relative">
+    <h2 className="text-2xl font-bold mb-6 text-center">Product Details</h2>
+    <button
+      className="text-white absolute top-4 right-4 text-2xl"
+      onClick={handleCloseModal}
+    >
+      X
+    </button>
+    <div className="overflow-y-auto max-h-[400px]">
+      <table className="table-auto w-full text-left text-white border-collapse border border-gray-700">
+        <thead>
+          <tr>
+            <th className="border border-gray-700 px-6 py-4">Image</th>
+            <th className="border border-gray-700 px-6 py-4">Product Name</th>
+            <th className="border border-gray-700 px-6 py-4">Price</th>
+            <th className="border border-gray-700 px-6 py-4">Quantity</th>
+          </tr>
+        </thead>
+        <tbody>
+          {selectedItems.map((product) => (
+            <tr key={product.id}>
+              <td className="border border-gray-700 px-6 py-4">
+                {product.images1 && product.images1.length > 0 ? (
+                 <Image
+                 src={
+                   product.images1[0].startsWith("data:image")
+                     ? product.images1[0]
+                     : `data:image/jpeg;base64,${product.images1[0]}`
+                 }
+                 alt="Product"
+                 width={80} // Set the width
+                 height={80} // Set the height
+                 className="object-cover rounded"
+               />
+                ) : (
+                  <span>No image</span>
+                )}
+              </td>
+              <td className="border border-gray-700 px-6 py-4">{product.name}</td>
+              <td className="border border-gray-700 px-6 py-4">{product.price}</td>
+              <td className="border border-gray-700 px-6 py-4">{product.quantity}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
-      {/* Modal for Delivery Details */}
+)}
+
+
+
+
+
+
+      {/* Modal for displaying delivery details */}
       {selectedDelivery && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-gray-800 text-gray-200 rounded-lg shadow-lg p-6 w-[90%] md:w-[50%]">
-            <h2 className="text-xl font-bold mb-4">Delivery Details</h2>
-            <p><strong>Address:</strong> {selectedDelivery.address}</p>
-            <p><strong>City:</strong> {selectedDelivery.city}</p>
-            <p><strong>Country:</strong> {selectedDelivery.country}</p>
-            <p><strong>Phone:</strong> {selectedDelivery.phone}</p>
-            <p><strong>Province:</strong> {selectedDelivery.province}</p>
-            <p><strong>Street:</strong> {selectedDelivery.street}</p>
-            <div className="mt-6 text-right">
-              <button
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
-                onClick={handleCloseModal}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+  <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+    <div className="bg-gray-900 p-8 rounded relative">
+      <h2 className="text-2xl font-bold mb-4">Delivery Details</h2>
+      <button
+        className="text-white absolute top-4 right-4 text-lg"
+        onClick={handleCloseModal}
+      >
+        X
+      </button>
+      <table className="table-auto w-full text-left text-white border-collapse border border-gray-700">
+      
+        <tbody>
+        <tr>
+            <td className="border border-gray-700 px-4 py-2"><b>Phone</b></td>
+            <td className="border border-gray-700 px-4 py-2">{selectedDelivery.phone}</td>
+          </tr>
+          <tr>
+            <td className="border border-gray-700 px-4 py-2"> <b>Address</b></td>
+            <td className="border border-gray-700 px-4 py-2">{selectedDelivery.street}</td>
+          </tr>
+          <tr>
+            <td className="border border-gray-700 px-4 py-2"><b>City</b></td>
+            <td className="border border-gray-700 px-4 py-2">{selectedDelivery.city}</td>
+          </tr>
+          <tr>
+            <td className="border border-gray-700 px-4 py-2"><b>Province</b></td>
+            <td className="border border-gray-700 px-4 py-2">{selectedDelivery.province}</td>
+          </tr>
+          <tr>
+            <td className="border border-gray-700 px-4 py-2"><b>Country</b></td>
+            <td className="border border-gray-700 px-4 py-2">{selectedDelivery.country}</td>
+          </tr>
+       
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
@@ -803,6 +1037,7 @@ export default function Orders() {
 //           </div>
 //         </div>
 //       )}
+
 //     </div>
 //   );
 // }

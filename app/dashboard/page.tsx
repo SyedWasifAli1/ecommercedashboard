@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { useEffect, useState } from "react";
+import { getDocs, collection } from "firebase/firestore";
+import { firestore } from "../lib/firebase-config";
 
 interface User {
   uid: string;
@@ -12,13 +15,24 @@ interface Product {
   price: number;
 }
 
+interface Category {
+  id: string;
+  name: string;
+}
+
 export default function Dashboard() {
   const [users, setUsers] = useState<User[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [productsCount, setProductsCount] = useState<number>(0);
+  const [categoriesCount, setCategoriesCount] = useState<number>(0); // Categories count state
+  const [allSubCategoriesCount, setAllSubCategoriesCount] = useState<number>(0); // Total subcategories count across all categories
+  const [ordersCount, setOrdersCount] = useState<number>(0); // Total orders count from user_orders
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingSubCategories, setLoadingSubCategories] = useState(true); // Subcategories loading state
+  const [loadingOrders, setLoadingOrders] = useState(true); // Orders loading state
 
-  // Fetch users from API
+  // Fetch users, products, categories, subcategories, and orders
   useEffect(() => {
     async function fetchUsers() {
       try {
@@ -32,20 +46,76 @@ export default function Dashboard() {
       }
     }
 
-    async function fetchProducts() {
+    async function fetchProductsCount() {
       try {
-        const response = await fetch("/api/fetchProducts");
-        const data: Product[] = await response.json();
-        setProducts(data);
+        const querySnapshot = await getDocs(collection(firestore, "products"));
+        setProductsCount(querySnapshot.size); // Get the count of documents in the products collection
         setLoadingProducts(false);
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error("Error fetching products count:", error);
         setLoadingProducts(false);
       }
     }
 
+    async function fetchCategoriesCount() {
+      try {
+        const querySnapshot = await getDocs(collection(firestore, "category"));
+        setCategoriesCount(querySnapshot.size); // Get the count of documents in the category collection
+        setLoadingCategories(false);
+      } catch (error) {
+        console.error("Error fetching categories count:", error);
+        setLoadingCategories(false);
+      }
+    }
+
+    async function fetchAllSubCategoriesCount() {
+      try {
+        const categorySnapshot = await getDocs(collection(firestore, "category"));
+        let totalSubCategories = 0;
+
+        // For each category, fetch its subcategories
+        for (const categoryDoc of categorySnapshot.docs) {
+          const categoryId = categoryDoc.id;
+          const subCategorySnapshot = await getDocs(collection(firestore, `category/${categoryId}/sub_categories`));
+          totalSubCategories += subCategorySnapshot.size; // Add the count of subcategories for this category
+        }
+
+        setAllSubCategoriesCount(totalSubCategories); // Set the total subcategories count
+        setLoadingSubCategories(false);
+      } catch (error) {
+        console.error("Error fetching subcategories count:", error);
+        setLoadingSubCategories(false);
+      }
+    }
+
+    async function fetchOrdersCount() {
+      try {
+        const categorySnapshot = await getDocs(collection(firestore, "orders"));
+        let totalSubCategories = 0;
+
+        // For each category, fetch its subcategories
+        for (const categoryDoc of categorySnapshot.docs) {
+          const categoryId = categoryDoc.id;
+          const subCategorySnapshot = await getDocs(collection(firestore, `orders/${categoryId}/user_orders`));
+          totalSubCategories += subCategorySnapshot.size; // Add the count of subcategories for this category
+        }
+
+        setOrdersCount(totalSubCategories); // Set the total subcategories count
+        setLoadingSubCategories(false);
+      } catch (error) {
+        console.error("Error fetching subcategories count:", error);
+        setLoadingSubCategories(false);
+      }
+    }
+    
+    
+    
+
     fetchUsers();
-    fetchProducts();
+    fetchProductsCount();
+    fetchCategoriesCount();
+    fetchAllSubCategoriesCount(); // Fetch total subcategories count across all categories
+    fetchOrdersCount(); // Fetch total orders count from user_orders subcollections
   }, []);
 
   return (
@@ -65,42 +135,30 @@ export default function Dashboard() {
           {loadingProducts ? (
             <p>Loading products...</p>
           ) : (
-            <p className="text-lg font-semibold">Total Products: {products.length}</p>
+            <p className="text-lg font-semibold">Total Products: {productsCount}</p>
           )}
         </div>
         <div className="bg-gray-800 p-4 rounded">
           <h2 className="text-xl font-bold mb-2">Categories</h2>
-          {loadingProducts ? (
-            <p>Loading products...</p>
+          {loadingCategories ? (
+            <p>Loading categories...</p>
           ) : (
-            <p className="text-lg font-semibold">Total Categories: {products.length}</p>
+            <p className="text-lg font-semibold">Total Categories: {categoriesCount}</p>
           )}
         </div>
         <div className="bg-gray-800 p-4 rounded">
           <h2 className="text-xl font-bold mb-2">Sub Categories</h2>
-          {loadingProducts ? (
-            <p>Loading products...</p>
+          {loadingSubCategories ? (
+            <p>Loading subcategories...</p>
           ) : (
-            <p className="text-lg font-semibold">Total Sub Categories: {products.length}</p>
+            <p className="text-lg font-semibold">Total Sub Categories: {allSubCategoriesCount}</p>
           )}
         </div>
-        <div className="bg-gray-800 p-4 rounded">
-          <h2 className="text-xl font-bold mb-2">Orders</h2>
-          {loadingProducts ? (
-            <p>Loading products...</p>
-          ) : (
-            <p className="text-lg font-semibold">Total Orders: {products.length}</p>
-          )}
-        </div>
-        <div className="bg-gray-800 p-4 rounded">
-          <h2 className="text-xl font-bold mb-2">CheckOut</h2>
-          {loadingProducts ? (
-            <p>Loading products...</p>
-          ) : (
-            <p className="text-lg font-semibold">Total CheckOut: {products.length}</p>
-          )}
-        </div>
+      
       </div>
     </div>
   );
 }
+
+
+
