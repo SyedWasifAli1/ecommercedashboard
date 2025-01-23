@@ -739,6 +739,9 @@
 //     </div>
 //   );
 // }
+
+
+
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
@@ -768,7 +771,9 @@ export default function Products() {
   const [subCategories, setSubCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-
+  // const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [selectAll, setSelectAll] = useState(false);
   const fetchCategories = async () => {
     const categorySnapshot = await getDocs(collection(firestore, "category"));
     const categoryData: Category[] = categorySnapshot.docs.map((doc) => ({
@@ -813,6 +818,58 @@ export default function Products() {
     fetchCategories();
   }, [fetchProducts]);
 
+
+  const handleCheckboxChange = (id: string) => {
+    setSelectedProducts((prev) => {
+      const updatedSet = new Set(prev);
+      if (updatedSet.has(id)) {
+        updatedSet.delete(id);
+      } else {
+        updatedSet.add(id);
+      }
+      return updatedSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedProducts(new Set());
+    } else {
+      setSelectedProducts(new Set(products.map((product) => product.id)));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const handleDeleteSelected = async () => {
+    try {
+      for (const id of selectedProducts) {
+        await deleteDoc(doc(firestore, "products", id));
+      }
+      setProducts((prev) => prev.filter((product) => !selectedProducts.has(product.id)));
+      setSelectedProducts(new Set());
+      alert("Selected products deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting selected products:", error);
+    }
+  };
+  // const handleDeleteSelected = async () => {
+  //   try {
+  //     await Promise.all(
+  //       selectedProducts.map((id) => deleteDoc(doc(firestore, "products", id)))
+  //     );
+  //     setProducts((prev) => prev.filter((product) => !selectedProducts.includes(product.id)));
+  //     setSelectedProducts([]);
+  //     alert("Selected products deleted successfully.");
+  //   } catch (error) {
+  //     console.error("Error deleting selected products:", error);
+  //   }
+  // };
+
+  // const toggleSelectProduct = (id: string) => {
+  //   setSelectedProducts((prev) =>
+  //     prev.includes(id) ? prev.filter((productId) => productId !== id) : [...prev, id]
+  //   );
+  // };
   const handleDelete = async (id: string) => {
     try {
       await deleteDoc(doc(firestore, "products", id));
@@ -861,6 +918,14 @@ export default function Products() {
           <table className="table-auto w-full border-collapse border border-gray-700 text-sm">
             <thead>
               <tr className="bg-gray-800 text-left">
+                <th className="border border-gray-700 px-4 py-2">
+
+                <input
+                    type="checkbox"
+                    checked={selectAll}
+                    onChange={handleSelectAll}
+                  />
+                </th>
                 <th className="border border-gray-700 px-4 py-2">Thumbnail</th>
                 <th className="border border-gray-700 px-4 py-2">SKU</th>
                 <th className="border border-gray-700 px-4 py-2">Name</th>
@@ -877,6 +942,19 @@ export default function Products() {
                   key={product.id}
                   className="hover:bg-gray-800 transition duration-150 ease-in-out"
                 >
+                    <td className="border border-gray-700 px-4 py-2 text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedProducts.has(product.id)}
+                      onChange={() => handleCheckboxChange(product.id)}
+                    />
+                    {/* <input
+                      type="checkbox"
+                      checked={selectedProducts.includes(product.id)}
+                      onChange={() => toggleSelectProduct(product.id)}
+                      className="form-checkbox"
+                    /> */}
+                  </td>
                   <td className="border border-gray-700 px-4 py-2">
                     {product.images1 && product.images1.length > 0 ? (
                       <Image
@@ -893,7 +971,7 @@ export default function Products() {
                   <td className="border border-gray-700 px-4 py-2">{product.sku}</td>
                   <td className="border border-gray-700 px-4 py-2">{product.name}</td>
                   <td className="border border-gray-700 px-4 py-2">
-                    {product.price ? `$${product.price.toFixed(2)}` : "N/A"}
+                    {product.price ? `PKR:${product.price.toFixed(2)}` : "N/A"}
                   </td>
                   <td className="border border-gray-700 px-4 py-2">{product.stock}</td>
                   <td className="border border-gray-700 px-4 py-2">
@@ -922,6 +1000,14 @@ export default function Products() {
           </table>
         </div>
       )}
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={handleDeleteSelected}
+            className="bg-red-500 px-4 py-2 rounded text-white"
+          >
+            Delete Selected Products
+          </button>
+        </div>
       {editingProduct && (
         <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-gray-800 bg-opacity-50">
           <div className="bg-gray-900 p-8 rounded shadow-lg w-1/2">
