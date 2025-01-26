@@ -905,7 +905,7 @@ export default function Products() {
     subCategories.find((subCategory) => subCategory.id === id)?.name || "Unknown";
 
   return (
-    <div className="h-[80vh] bg-white text-black p-8">
+    <div className="h-[80vh] text-black p-8">
       <h1 className="text-3xl font-bold mb-8 text-center">Products List</h1>
       {loading ? (
         <p className="text-center">Loading...</p>
@@ -916,9 +916,10 @@ export default function Products() {
           <table className="table-auto w-full border-collapse border border-gray-700 text-sm">
             <thead>
               <tr className="bg-white text-left">
-                <th className="border border-gray-700 px-4 py-2">
+                <th className="border border-gray-700 px-4  text-center py-2">
 
                 <input
+                className=""
                     type="checkbox"
                     checked={selectAll}
                     onChange={handleSelectAll}

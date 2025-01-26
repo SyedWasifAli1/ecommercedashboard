@@ -316,7 +316,7 @@ export default function Orders() {
 
   
   return (
-    <div className="h-[80vh] bg-white text-black-200 p-8">
+    <div className="h-[80vh]  text-black-200 p-8">
       <h1 className="text-3xl font-bold mb-8">All Users Orders</h1>
       {loading ? (
         <p className="text-center">Loading...</p>

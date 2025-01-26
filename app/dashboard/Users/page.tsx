@@ -33,7 +33,7 @@ export default function Customers() {
   }, []);
 
   return (
-    <div className="h-[80vh] bg-white text-gray-800 p-8">
+    <div className="h-[80vh]  text-gray-800 p-8">
       <h1 className="text-3xl font-bold mb-4">Customer List</h1>
 
       {loading ? (
@@ -47,7 +47,7 @@ export default function Customers() {
             <div className="overflow-x-auto h-[60vh] overflow-y-auto">
               <table className="table-auto w-full border-collapse border border-gray-300">
                 <thead>
-                  <tr className="bg-gray-100">
+                  <tr className="bg-white">
                     <th className="border border-gray-300 px-4 py-2">ID</th>
                     <th className="border border-gray-300 px-4 py-2">Email</th>
                   </tr>

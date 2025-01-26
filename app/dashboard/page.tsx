@@ -120,10 +120,10 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="h-[80vh] bg-white text-black p-8">
+    <div className="h-[80vh]  text-black p-8">
       <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-gray-800 p-4 rounded">
+        <div className="bg-gray-200 p-4 rounded">
           <h2 className="text-xl font-bold mb-2">Users</h2>
           {loadingUsers ? (
             <p>Loading users...</p>
@@ -131,7 +131,7 @@ export default function Dashboard() {
             <p className="text-lg font-semibold">Total Users: {users}</p>
           )}
         </div>
-        <div className="bg-gray-800 p-4 rounded">
+        <div className="bg-gray-200 p-4 rounded">
           <h2 className="text-xl font-bold mb-2">Products</h2>
           {loadingProducts ? (
             <p>Loading products...</p>
@@ -139,7 +139,7 @@ export default function Dashboard() {
             <p className="text-lg font-semibold">Total Products: {productsCount}</p>
           )}
         </div>
-        <div className="bg-gray-800 p-4 rounded">
+        <div className="bg-gray-200 p-4 rounded">
           <h2 className="text-xl font-bold mb-2">Categories</h2>
           {loadingCategories ? (
             <p>Loading categories...</p>
@@ -147,7 +147,7 @@ export default function Dashboard() {
             <p className="text-lg font-semibold">Total Categories: {categoriesCount}</p>
           )}
         </div>
-        <div className="bg-gray-800 p-4 rounded">
+        <div className="bg-gray-200 p-4 rounded">
           <h2 className="text-xl font-bold mb-2">Sub Categories</h2>
           {loadingSubCategories ? (
             <p>Loading subcategories...</p>
