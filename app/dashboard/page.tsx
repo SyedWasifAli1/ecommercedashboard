@@ -130,7 +130,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="h-[80vh] bg-gray-900 text-gray-200 p-8">
+    <div className="h-[80vh] bg-white text-black p-8">
       <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-gray-800 p-4 rounded">
