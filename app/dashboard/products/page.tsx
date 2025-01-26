@@ -907,7 +907,7 @@ export default function Products() {
     subCategories.find((subCategory) => subCategory.id === id)?.name || "Unknown";
 
   return (
-    <div className="h-[80vh] bg-gray-900 text-gray-200 p-8">
+    <div className="h-[80vh] bg-white text-black p-8">
       <h1 className="text-3xl font-bold mb-8 text-center">Products List</h1>
       {loading ? (
         <p className="text-center">Loading...</p>
@@ -917,7 +917,7 @@ export default function Products() {
         <div className="overflow-x-auto h-[60vh] overflow-y-auto">
           <table className="table-auto w-full border-collapse border border-gray-700 text-sm">
             <thead>
-              <tr className="bg-gray-800 text-left">
+              <tr className="bg-white text-left">
                 <th className="border border-gray-700 px-4 py-2">
 
                 <input
@@ -940,7 +940,7 @@ export default function Products() {
               {products.map((product) => (
                 <tr
                   key={product.id}
-                  className="hover:bg-gray-800 transition duration-150 ease-in-out"
+                  className="hover:bg-gray-100 transition duration-150 ease-in-out"
                 >
                     <td className="border border-gray-700 px-4 py-2 text-center">
                     <input
@@ -1009,8 +1009,8 @@ export default function Products() {
           </button>
         </div>
       {editingProduct && (
-        <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-gray-800 bg-opacity-50">
-          <div className="bg-gray-900 p-8 rounded shadow-lg w-1/2">
+        <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-white bg-opacity-50">
+          <div className="bg-white p-8 rounded shadow-lg w-1/2">
             <h2 className="text-xl font-bold mb-4">Edit Product</h2>
             <div className="flex flex-col space-y-4">
               <input
@@ -1019,7 +1019,7 @@ export default function Products() {
                 onChange={(e) =>
                   setEditingProduct({ ...editingProduct, name: e.target.value })
                 }
-                className="w-full px-3 py-2 bg-gray-700 text-gray-200 rounded"
+                className="w-full px-3 py-2 bg-gray-200 text-black rounded"
                 placeholder="Product Name"
               />
               <input
@@ -1028,7 +1028,7 @@ export default function Products() {
                 onChange={(e) =>
                   setEditingProduct({ ...editingProduct, sku: e.target.value })
                 }
-                className="w-full px-3 py-2 bg-gray-700 text-gray-200 rounded"
+                className="w-full px-3 py-2 bg-gray-200 text-black rounded"
                 placeholder="SKU"
               />
               <input
@@ -1037,7 +1037,7 @@ export default function Products() {
                 onChange={(e) =>
                   setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) })
                 }
-                className="w-full px-3 py-2 bg-gray-700 text-gray-200 rounded"
+                className="w-full px-3 py-2 bg-gray-200 text-black rounded"
                 placeholder="Price"
               />
               <input
@@ -1046,7 +1046,7 @@ export default function Products() {
                 onChange={(e) =>
                   setEditingProduct({ ...editingProduct, stock: parseInt(e.target.value, 10) })
                 }
-                className="w-full px-3 py-2 bg-gray-700 text-gray-200 rounded"
+                className="w-full px-3 py-2 bg-gray-200 text-black rounded"
                 placeholder="Stock"
               />
               <select
@@ -1054,7 +1054,7 @@ export default function Products() {
                 onChange={(e) =>
                   setEditingProduct({ ...editingProduct, category: e.target.value })
                 }
-                className="w-full px-3 py-2 bg-gray-700 text-gray-200 rounded"
+                className="w-full px-3 py-2 bg-gray-200 text-black rounded"
               >
                 <option value="">Select Category</option>
                 {categories.map((category) => (
@@ -1068,7 +1068,7 @@ export default function Products() {
                 onChange={(e) =>
                   setEditingProduct({ ...editingProduct, sub_category: e.target.value })
                 }
-                className="w-full px-3 py-2 bg-gray-700 text-gray-200 rounded"
+                className="w-full px-3 py-2 bg-gray-200 text-black rounded"
               >
                 <option value="">Select Sub-Category</option>
                 {subCategories.map((subCategory) => (

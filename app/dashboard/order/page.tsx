@@ -48,22 +48,25 @@ export default function Orders() {
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryDetails | null>(null);
 
   // Fetch emails from the custom API
-  const fetchEmails = async (): Promise<Record<string, string>> => {
+  async function fetchEmails(): Promise<{ [userId: string]: string }> {
     try {
-      const response = await fetch("/api/fetchUsers"); // Adjust API route as needed
-      if (!response.ok) {
-        throw new Error("Failed to fetch user emails");
-      }
-      const users = await response.json();
-      return users.reduce((map: Record<string, string>, user: { uid: string; email: string }) => {
-        map[user.uid] = user.email || "No Email";
-        return map;
-      }, {}); 
+      const customersQuery = collection(firestore, "customers");
+      const querySnapshot = await getDocs(customersQuery);
+  
+      const emailMap: { [userId: string]: string } = {};
+      querySnapshot.forEach((doc) => {
+        const customerData = doc.data();
+        const userId = doc.id;
+        emailMap[userId] = customerData.email || "No Email";
+      });
+  
+      return emailMap;
     } catch (error) {
-      console.error("Error fetching emails:", error);
+      console.error("Error fetching customer emails:", error);
       return {};
     }
-  };
+  }
+  
   
 
   // Fetch orders and match emails with user IDs
@@ -313,7 +316,7 @@ export default function Orders() {
 
   
   return (
-    <div className="h-[80vh] bg-gray-900 text-gray-200 p-8">
+    <div className="h-[80vh] bg-white text-black-200 p-8">
       <h1 className="text-3xl font-bold mb-8">All Users Orders</h1>
       {loading ? (
         <p className="text-center">Loading...</p>
@@ -321,9 +324,9 @@ export default function Orders() {
         <p className="text-center">No orders found.</p>
       ) : (
         <div className="overflow-x-auto h-[60vh] overflow-y-auto">
-          <table className="table-auto w-full border-collapse border border-gray-700">
+          <table className="table-auto w-full border-collapse border border-white">
             <thead>
-              <tr className="bg-gray-800">
+              <tr className="bg-white">
                 <th className="border border-gray-700 px-4 py-2">Order ID</th>
                 <th className="border border-gray-700 px-4 py-2">User Email</th>
                 <th className="border border-gray-700 px-4 py-2">Contact</th>
@@ -336,14 +339,14 @@ export default function Orders() {
             </thead>
             <tbody>
               {orders.map((order) => (
-                <tr key={order.orderId} className="hover:bg-gray-800">
+                <tr key={order.orderId} className="hover:bg-gray-100">
                   <td className="border border-gray-700 px-4 py-2">{order.orderId}</td>
                   <td className="border border-gray-700 px-4 py-2">{order.userEmail}</td>
                   <td className="border border-gray-700 px-4 py-2">{order.contactNumber}</td>
                   <td className="border border-gray-700 px-4 py-2">{order.city}</td>
                   <td className="border border-gray-700 px-4 py-2">
                     <select
-                      className="bg-gray-700 text-white px-2 py-1 rounded"
+                      className="bg-gray-500 text-white px-2 py-1 rounded"
                       value={order.status}
                       onChange={(e) => handleUpdateStatus(order.orderId, e.target.value)}
                     >
@@ -389,55 +392,54 @@ export default function Orders() {
       {/* Modal for displaying product details */}
       {selectedItems.length > 0 && (
   <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
-  <div className="bg-gray-900 p-12 rounded-lg max-w-4xl w-full relative">
-    <h2 className="text-2xl font-bold mb-6 text-center">Product Details</h2>
-    <button
-      className="text-white absolute top-4 right-4 text-2xl"
-      onClick={handleCloseModal}
-    >
-      X
-    </button>
-    <div className="overflow-y-auto max-h-[400px]">
-      <table className="table-auto w-full text-left text-white border-collapse border border-gray-700">
-        <thead>
-          <tr>
-            <th className="border border-gray-700 px-6 py-4">Image</th>
-            <th className="border border-gray-700 px-6 py-4">Product Name</th>
-            <th className="border border-gray-700 px-6 py-4">Price</th>
-            <th className="border border-gray-700 px-6 py-4">Quantity</th>
-          </tr>
-        </thead>
-        <tbody>
-          {selectedItems.map((product) => (
-            <tr key={product.id}>
-              <td className="border border-gray-700 px-6 py-4">
-                {product.images1 && product.images1.length > 0 ? (
-                 <Image
-                 src={
-                   product.images1[0].startsWith("data:image")
-                     ? product.images1[0]
-                     : `data:image/jpeg;base64,${product.images1[0]}`
-                 }
-                 alt="Product"
-                 width={80} // Set the width
-                 height={80} // Set the height
-                 className="object-cover rounded"
-               />
-                ) : (
-                  <span>No image</span>
-                )}
-              </td>
-              <td className="border border-gray-700 px-6 py-4">{product.name}</td>
-              <td className="border border-gray-700 px-6 py-4">{product.price}</td>
-              <td className="border border-gray-700 px-6 py-4">{product.quantity}</td>
+    <div className="bg-white p-12 rounded-lg max-w-4xl w-full relative">
+      <h2 className="text-2xl font-bold mb-6 text-center text-black">Product Details</h2>
+      <button
+        className="text-black absolute top-4 right-4 text-2xl"
+        onClick={handleCloseModal}
+      >
+        X
+      </button>
+      <div className="overflow-y-auto max-h-[400px]">
+        <table className="table-auto w-full text-left text-black border-collapse border border-gray-300">
+          <thead>
+            <tr>
+              <th className="border border-gray-300 px-6 py-4">Image</th>
+              <th className="border border-gray-300 px-6 py-4">Product Name</th>
+              <th className="border border-gray-300 px-6 py-4">Price</th>
+              <th className="border border-gray-300 px-6 py-4">Quantity</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {selectedItems.map((product) => (
+              <tr key={product.id}>
+                <td className="border border-gray-300 px-6 py-4">
+                  {product.images1 && product.images1.length > 0 ? (
+                    <Image
+                      src={
+                        product.images1[0].startsWith("data:image")
+                          ? product.images1[0]
+                          : `data:image/jpeg;base64,${product.images1[0]}`
+                      }
+                      alt="Product"
+                      width={80} // Set the width
+                      height={80} // Set the height
+                      className="object-cover rounded"
+                    />
+                  ) : (
+                    <span>No image</span>
+                  )}
+                </td>
+                <td className="border border-gray-300 px-6 py-4">{product.name}</td>
+                <td className="border border-gray-300 px-6 py-4">{product.price}</td>
+                <td className="border border-gray-300 px-6 py-4">{product.quantity}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
-</div>
-
 )}
 
 

@@ -41,4 +41,4 @@ yarn-error.log*
 next-env.d.ts
 
 # Firebase service account key
-config/authwithfirebase-20a41-firebase-adminsdk-2s6ag-5c95b2c3fd.json
+# config/authwithfirebase-20a41-firebase-adminsdk-2s6ag-5c95b2c3fd.json

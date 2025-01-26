@@ -21,7 +21,7 @@ interface Category {
 }
 
 export default function Dashboard() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<number>(0);
   const [productsCount, setProductsCount] = useState<number>(0);
   const [categoriesCount, setCategoriesCount] = useState<number>(0); // Categories count state
   const [allSubCategoriesCount, setAllSubCategoriesCount] = useState<number>(0); // Total subcategories count across all categories
@@ -34,18 +34,28 @@ export default function Dashboard() {
 
   // Fetch users, products, categories, subcategories, and orders
   useEffect(() => {
+    // async function fetchUsers() {
+    //   try {
+    //     const response = await fetch("/api/fetchUsers");
+    //     const data: User[] = await response.json();
+    //     setUsers(data);
+    //     setLoadingUsers(false);
+    //   } catch (error) {
+    //     console.error("Error fetching users:", error);
+    //     setLoadingUsers(false);
+    //   }
+    // }
     async function fetchUsers() {
       try {
-        const response = await fetch("/api/fetchUsers");
-        const data: User[] = await response.json();
-        setUsers(data);
+        const querySnapshot = await getDocs(collection(firestore, "customers")); // Replace "customers" with your collection name
+        setUsers(querySnapshot.size); // Get the count of documents in the customers collection
         setLoadingUsers(false);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching customers count:", error);
         setLoadingUsers(false);
       }
     }
-
+    
     async function fetchProductsCount() {
       try {
         const querySnapshot = await getDocs(collection(firestore, "products"));
@@ -56,6 +66,7 @@ export default function Dashboard() {
         setLoadingProducts(false);
       }
     }
+
 
     async function fetchCategoriesCount() {
       try {
@@ -127,7 +138,7 @@ export default function Dashboard() {
           {loadingUsers ? (
             <p>Loading users...</p>
           ) : (
-            <p className="text-lg font-semibold">Total Users: {users.length}</p>
+            <p className="text-lg font-semibold">Total Users: {users}</p>
           )}
         </div>
         <div className="bg-gray-800 p-4 rounded">
