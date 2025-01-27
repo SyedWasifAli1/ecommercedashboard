@@ -1,7 +1,7 @@
 "use client";
 import Image from 'next/image';
 import { useEffect, useState } from "react";
-import * as XLSX from "xlsx"
+// import * as XLSX from "xlsx"
 import {
   collection,
   getDocs,
