@@ -219,19 +219,19 @@ const [filterEndDate, setFilterEndDate] = useState("");
 
 
 
-  const exportToExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(
-      orders.filter(
-        (order) =>
-          (filterOrderId === "" || order.orderId.toLowerCase().includes(filterOrderId.toLowerCase()) || order.userEmail.includes(filterOrderId)) &&
-          (filterStatus === "" || order.status === filterStatus) &&
-          isWithinDateRange(order.datetime)
-      )
-    );
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Orders");
-    XLSX.writeFile(wb, "orders_report.xlsx");
-  };
+  // const exportToExcel = () => {
+  //   const ws = XLSX.utils.json_to_sheet(
+  //     orders.filter(
+  //       (order) =>
+  //         (filterOrderId === "" || order.orderId.toLowerCase().includes(filterOrderId.toLowerCase()) || order.userEmail.includes(filterOrderId)) &&
+  //         (filterStatus === "" || order.status === filterStatus) &&
+  //         isWithinDateRange(order.datetime)
+  //     )
+  //   );
+  //   const wb = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(wb, ws, "Orders");
+  //   XLSX.writeFile(wb, "orders_report.xlsx");
+  // };
 
 
   const handlePrintOrderSlip = (order: Order) => {
@@ -348,12 +348,13 @@ const [filterEndDate, setFilterEndDate] = useState("");
   return (
     <div className="h-[80vh]  text-black-200 p-8">
       <h1 className="text-3xl font-bold mb-8">All Users Orders</h1>
-      <button
+{/*       <button
                   className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded"
                   onClick={() => exportToExcel()}
                 >
                   <FiPrinter size={20} style={{ marginRight: "5px" }} />
                 </button>
+       */}
       <div className="mb-4 flex flex-wrap gap-4">
   <div className="flex-1 min-w-[200px]">
     <label htmlFor="orderId" className="block text-sm font-medium text-gray-700">Order ID And User Email</label>
