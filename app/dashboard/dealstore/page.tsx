@@ -256,21 +256,15 @@
 
 
 // /* eslint-disable @typescript-eslint/no-unused-vars */
+
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { firestore } from "../../lib/firebase-config"; // Adjust to your config
+import { firestore } from "../../lib/firebase-config";
 import Image from "next/image";
-import {
-  collection,
-  getDocs,
-  addDoc,
-  deleteDoc,
-  updateDoc,
-  doc,
-} from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import Link from "next/link";
 
-// Define types for category and deals
 interface Category {
   id: string;
   name: string;
@@ -282,26 +276,15 @@ interface Deal {
   name: string;
   category: string;
   details: string;
-  location: string;
-  policy: string;
-  isTrending: boolean;
 }
 
-const HeroSectionSlider = () => {
+const DealsPage = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [deals, setDeals] = useState<Deal[]>([]);
   const [selectedDeals, setSelectedDeals] = useState<Deal[]>([]);
-  const [newDealName, setNewDealName] = useState("");
-  const [newDealDetails, setNewDealDetails] = useState(""); // New state for deal details
-  const [newDealLocation, setNewDealLocation] = useState(""); // New state for deal location
-  const [newDealPolicy, setNewDealPolicy] = useState(""); // New state for deal policy
-  const [newImage, setNewImage] = useState<File | null>(null);
-  const [isTrending, setIsTrending] = useState(false); // State for trending checkbox
-  const [modalOpen, setModalOpen] = useState(false); // State to control modal visibility
-  const [currentDeal, setCurrentDeal] = useState<Deal | null>(null); // State for the deal to edit
 
-  // Fetch categories from Firestore
+  // Fetch categories
   const fetchCategories = async () => {
     const snapshot = await getDocs(collection(firestore, "dealstorecategory"));
     const fetchedCategories = snapshot.docs.map((doc) => ({
@@ -309,11 +292,9 @@ const HeroSectionSlider = () => {
       name: doc.data().name,
     }));
     setCategories(fetchedCategories);
-    setSelectedCategory(fetchedCategories[0]?.id || ""); // Default to the first category
   };
 
-  // Fetch deals from Firestore
-
+  // Fetch deals
   const fetchDeals = useCallback(async () => {
     const snapshot = await getDocs(collection(firestore, "dealstore"));
     const fetchedDeals = snapshot.docs.map((doc) => ({
@@ -321,122 +302,61 @@ const HeroSectionSlider = () => {
       url: doc.data().url,
       name: doc.data().name,
       category: doc.data().category,
-      details: doc.data().details || "",
-      location: doc.data().location || "",
-      policy: doc.data().policy || "",
-      isTrending: doc.data().isTrending || false,
+      details: doc.data().details,
     }));
     setDeals(fetchedDeals);
-    setSelectedDeals(fetchedDeals.filter((deal) => deal.category === selectedCategory));
-  }, [selectedCategory]);  // This is the dependency array, make sure to add necessary dependencies here.
-  
-  useEffect(() => {
-    fetchDeals();
-  }, [fetchDeals]);  // Now `fetchDeals` is included in dependencies for useEffect.
-  
+  }, []);
 
-  // Fetch data on mount
   useEffect(() => {
     fetchCategories();
     fetchDeals();
   }, [fetchDeals]);
 
-  // Update selected deals when category changes
+  // Filter deals by selected category
   useEffect(() => {
-    setSelectedDeals(deals.filter((deal) => deal.category === selectedCategory));
+    if (selectedCategory) {
+      setSelectedDeals(deals.filter((deal) => deal.category === selectedCategory));
+    } else {
+      setSelectedDeals(deals);
+    }
   }, [selectedCategory, deals]);
 
-  // Handle adding a new deal
-  const handleAddDeal = async () => {
-    if (!newImage || !newDealName || !selectedCategory || !newDealDetails || !newDealLocation || !newDealPolicy) {
-      return alert("Please fill out all fields and select an image.");
-    }
-
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64Image = reader.result as string;
-      try {
-        await addDoc(collection(firestore, "dealstore"), {
-          url: base64Image,
-          name: newDealName,
-          category: selectedCategory,
-          details: newDealDetails,
-          location: newDealLocation,
-          policy: newDealPolicy,
-          isTrending: isTrending,
-        });
-        alert("Deal added successfully!");
-        setNewImage(null);
-        setNewDealName("");
-        setNewDealDetails("");
-        setNewDealLocation("");
-        setNewDealPolicy("");
-        setIsTrending(false);
-        fetchDeals(); // Reload deals after adding
-      } catch (error) {
-        console.error("Error adding deal:", error);
-      }
-    };
-
-    reader.readAsDataURL(newImage); // Convert the image to base64
-  };
-
-  // Handle updating a deal
-  const handleUpdateDeal = async () => {
-    if (!currentDeal || !currentDeal.id) return alert("Deal ID is missing.");
-
-    try {
-      const dealRef = doc(firestore, "dealstore", currentDeal.id);
-      await updateDoc(dealRef, {
-        name: currentDeal.name,
-        details: currentDeal.details,
-        location: currentDeal.location,
-        policy: currentDeal.policy,
-        isTrending: currentDeal.isTrending,
-      });
-      alert("Deal updated successfully!");
-      fetchDeals(); // Reload deals after updating
-      setModalOpen(false);
-    } catch (error) {
-      console.error("Error updating deal:", error);
-    }
-  };
-
-  // Handle deleting a deal
+  // Delete deal
   const handleDeleteDeal = async (id: string) => {
     try {
       await deleteDoc(doc(firestore, "dealstore", id));
       alert("Deal deleted successfully!");
-      fetchDeals(); // Reload deals after deletion
+      fetchDeals();
     } catch (error) {
       console.error("Error deleting deal:", error);
     }
   };
 
-  // Open the modal and set the deal for editing
-  const openEditModal = (deal: Deal) => {
-    setCurrentDeal(deal);
-    setModalOpen(true);
-  };
-
-  // Close the modal
-  const closeModal = () => {
-    setModalOpen(false);
-    setCurrentDeal(null);
-  };
-
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Deal Store</h1>
+      <h1 className="text-2xl font-bold mb-6">Deals</h1>
+
+      <div className="mb-4">
+        <Link href="/dashboard/dealstore/deal" className="bg-blue-500 text-white px-4 py-2 rounded">
+          Add New Deal
+        </Link>
+      </div>
+      <div className="mb-4">
+        <Link href="/dashboard/dealstore/category" className="bg-blue-500 text-white px-4 py-2 rounded">
+          Add New Deal Category
+        </Link>
+      </div>
+      {/* Add Deal Link */}
 
       {/* Category Selector */}
       <div className="mb-4">
-        <label className="block mb-2">Select Category:</label>
+        <label className="block mb-2">Filter by Category:</label>
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
           className="border border-gray-300 bg-gray-200 text-black rounded px-4 py-2 w-full"
         >
+          <option value="">All Categories</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
@@ -444,74 +364,9 @@ const HeroSectionSlider = () => {
           ))}
         </select>
       </div>
-      
 
-      {/* Add Deal Form */}
-      <div className="mt-6">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setNewImage(e.target.files?.[0] || null)}
-          className="mb-4"
-        />
-        <div className="mb-4">
-          <label className="block mb-2">Deal Name:</label>
-          <input
-            type="text"
-            value={newDealName}
-            onChange={(e) => setNewDealName(e.target.value)}
-            className="border border-gray-300 bg-gray-200 text-black rounded px-4 py-2 w-full"
-            placeholder="Enter deal name"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block mb-2">Details:</label>
-          <textarea
-            value={newDealDetails}
-            onChange={(e) => setNewDealDetails(e.target.value)}
-            className="border border-gray-300 bg-gray-200 text-black rounded px-4 py-2 w-full"
-            placeholder="Enter deal details"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block mb-2">Location:</label>
-          <input
-            type="text"
-            value={newDealLocation}
-            onChange={(e) => setNewDealLocation(e.target.value)}
-            className="border border-gray-300 bg-gray-200 text-black rounded px-4 py-2 w-full"
-            placeholder="Enter location"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block mb-2">Policy:</label>
-          <textarea
-            value={newDealPolicy}
-            onChange={(e) => setNewDealPolicy(e.target.value)}
-            className="border border-gray-300 bg-gray-200 text-black rounded px-4 py-2 w-full"
-            placeholder="Enter policy details"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={isTrending}
-              onChange={() => setIsTrending(!isTrending)}
-              className="mr-2"
-            />
-            Trending Deal
-          </label>
-        </div>
-        <button
-          onClick={handleAddDeal}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          Add Deal
-        </button>
-      </div>
-
-      <div className="mt-6">
+      {/* Deals Table */}
+      <div>
         <table className="w-full table-auto border-collapse border border-gray-300">
           <thead>
             <tr>
@@ -526,24 +381,12 @@ const HeroSectionSlider = () => {
             {selectedDeals.map((deal) => (
               <tr key={deal.id}>
                 <td className="border border-gray-300 px-4 py-2">
-                  <Image
-                    src={deal.url}
-                    alt={deal.name}
-                    width={100}
-                    height={100}
-                    className="object-cover"
-                  />
+                  <Image src={deal.url} alt={deal.name} width={100} height={100} />
                 </td>
                 <td className="border border-gray-300 px-4 py-2">{deal.name}</td>
                 <td className="border border-gray-300 px-4 py-2">{deal.category}</td>
                 <td className="border border-gray-300 px-4 py-2">{deal.details}</td>
                 <td className="border border-gray-300 px-4 py-2">
-                  <button
-                    onClick={() => openEditModal(deal)}
-                    className="bg-yellow-500 text-white px-4 py-2 rounded mr-2"
-                  >
-                    Edit
-                  </button>
                   <button
                     onClick={() => handleDeleteDeal(deal.id)}
                     className="bg-red-500 text-white px-4 py-2 rounded"
@@ -556,84 +399,11 @@ const HeroSectionSlider = () => {
           </tbody>
         </table>
       </div>
-
-      {/* Edit Deal Modal */}
-      {modalOpen && currentDeal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg w-96">
-            <h2 className="text-xl font-semibold mb-4">Edit Deal</h2>
-            <div className="mb-4">
-              <label className="block mb-2">Name:</label>
-              <input
-                type="text"
-                value={currentDeal.name}
-                onChange={(e) => setCurrentDeal({ ...currentDeal, name: e.target.value })}
-                className="border border-gray-300 bg-gray-200 text-black rounded px-4 py-2 w-full"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block mb-2">Details:</label>
-              <textarea
-                value={currentDeal.details}
-                onChange={(e) => setCurrentDeal({ ...currentDeal, details: e.target.value })}
-                className="border border-gray-300 bg-gray-200 text-black rounded px-4 py-2 w-full"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block mb-2">Location:</label>
-              <input
-                type="text"
-                value={currentDeal.location}
-                onChange={(e) => setCurrentDeal({ ...currentDeal, location: e.target.value })}
-                className="border border-gray-300 bg-gray-200 text-black rounded px-4 py-2 w-full"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block mb-2">Policy:</label>
-              <textarea
-                value={currentDeal.policy}
-                onChange={(e) => setCurrentDeal({ ...currentDeal, policy: e.target.value })}
-                className="border border-gray-300 bg-gray-200 text-black rounded px-4 py-2 w-full"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={currentDeal.isTrending}
-                  onChange={() =>
-                    setCurrentDeal({
-                      ...currentDeal,
-                      isTrending: !currentDeal.isTrending,
-                    })
-                  }
-                  className="mr-2"
-                />
-                Trending Deal
-              </label>
-            </div>
-            <div className="flex justify-between">
-              <button
-                onClick={handleUpdateDeal}
-                className="bg-blue-500 text-white px-4 py-2 rounded"
-              >
-                Save
-              </button>
-              <button
-                onClick={closeModal}
-                className="bg-gray-500 text-white px-4 py-2 rounded"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
 
-export default HeroSectionSlider;
+export default DealsPage;
 
 
 

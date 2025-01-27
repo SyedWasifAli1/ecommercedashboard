@@ -13,6 +13,7 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import { FiEdit, FiTrash } from "react-icons/fi";
+import Link from "next/link";
 
 // Utility function to convert string to Title Case
 const toTitleCase = (str: string) =>
@@ -115,6 +116,11 @@ const Categories = () => {
   return (
     <div className="p-6 text-black h-[80vh]">
       {/* Add/Edit dealstorecategory Form */}
+      <div className="mb-4">
+        <Link href="/dashboard/dealstore/" className="bg-blue-500 text-white px-4 py-2 rounded">
+        Deal List
+        </Link>
+      </div>
       <div className="mb-6">
         <input
           type="text"

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../app/lib/firebase-config";
+import Image from "next/image";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
@@ -46,7 +47,17 @@ export default function SignIn() {
         onSubmit={handleSignIn}
         className="bg-white p-8 rounded shadow-md w-80"
       >
-        <h1 className="text-xl font-bold mb-4">Sign In</h1>
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <Image
+            src="/icon.png" // Replace with your actual logo filename
+            alt="Logo"
+            width={100} // Adjust width as needed
+            height={100} // Adjust height as needed
+            priority // Ensures the image is preloaded
+          />
+        </div>
+        <h1 className="text-xl font-bold mb-4 text-center">Sign In</h1>
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
         <div className="mb-4">
           <label className="block text-gray-700">Email</label>
@@ -71,7 +82,7 @@ export default function SignIn() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+          className="w-full  bg-[#448f35] text-white py-2 rounded hover:bg-[#36792c]"
         >
           {loading ? "Signing in..." : "Sign In"}
         </button>

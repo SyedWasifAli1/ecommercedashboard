@@ -21,13 +21,13 @@ const Sidebar: React.FC = () => {
     }
   };
   return (
-    <div className={`flex flex-col bg-gray-800 text-white ${isOpen ? 'w-64' : 'w-20'} h-screen transition-all`}>
+    <div className={`flex flex-col bg-[#448f35] text-white ${isOpen ? 'w-64' : 'w-20'} h-screen transition-all`}>
       {/* Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-4 text-gray-400 focus:outline-none hover:text-white"
+        className="p-4 text-white focus:outline-none hover:text-white"
       >
-        <FiMenu size={24} />
+         <FiMenu size={24} /> 
       </button>
 
       {/* Navigation Links */}
@@ -37,32 +37,32 @@ const Sidebar: React.FC = () => {
             <FiHome size={20} className="mr-2" />
             {isOpen && 'Dashboard'}
           </li> */}
-          <li className="p-4 hover:bg-gray-700 flex items-center cursor-pointer">
+          <li className="p-4 hover:bg-[#36792c] flex items-center cursor-pointer">
             <Link href="/dashboard/" className="flex items-center w-full">
               <FiHome size={20} className="mr-2" />
               {isOpen && 'Dashboard'}
             </Link>
           </li>
-          <li className="p-4 hover:bg-gray-700 flex items-center cursor-pointer">
+          <li className="p-4 hover:bg-[#36792c] flex items-center cursor-pointer">
             <Link href="/dashboard/add_product" className="flex items-center w-full">
               <FiBox size={20} className="mr-2" />
               {isOpen && 'Add Products'}
             </Link>
           </li>
-          <li className="p-4 hover:bg-gray-700 flex items-center cursor-pointer">
+          <li className="p-4 hover:bg-[#36792c] flex items-center cursor-pointer">
             <Link href="/dashboard/products" className="flex items-center w-full">
               <FiBox size={20} className="mr-2" />
               {isOpen && 'Products List'}
             </Link>
           </li>
-          <li className="p-4 hover:bg-gray-700 flex items-center cursor-pointer">
+          <li className="p-4 hover:bg-[#36792c] flex items-center cursor-pointer">
             <Link href="/dashboard/Users" className="flex items-center w-full">
               <FiBox size={20} className="mr-2" />
               {isOpen && ' List of Users'}
             </Link>
           </li>
           
-          <li className="p-4 hover:bg-gray-700 flex items-center">
+          <li className="p-4 hover:bg-[#36792c] flex items-center">
             <Link href="/dashboard/order" className="flex items-center w-full">
 
               <FiList size={20} className="mr-2" />
@@ -70,7 +70,7 @@ const Sidebar: React.FC = () => {
             </Link>
 
           </li>
-          <li className="p-4 hover:bg-gray-700 flex items-center">
+          <li className="p-4 hover:bg-[#36792c] flex items-center">
             <Link href="/dashboard/categories" className="flex items-center w-full">
 
               <FiList size={20} className="mr-2" />
@@ -79,7 +79,7 @@ const Sidebar: React.FC = () => {
 
           </li>
 
-          <li className="p-4 hover:bg-gray-700 flex items-center">
+          <li className="p-4 hover:bg-[#36792c] flex items-center">
             <Link href="/dashboard/dealstore" className="flex items-center w-full">
 
               <FiList size={20} className="mr-2" />
@@ -88,7 +88,7 @@ const Sidebar: React.FC = () => {
 
           </li>
           
-          <li className="p-4 hover:bg-gray-700 flex items-center">
+          <li className="p-4 hover:bg-[#36792c] flex items-center">
             <Link href="/dashboard/slider" className="flex items-center w-full">
 
               <FiList size={20} className="mr-2" />
@@ -96,7 +96,7 @@ const Sidebar: React.FC = () => {
             </Link>
 
           </li>
-          <li className="p-4 hover:bg-gray-700 flex items-center">
+          <li className="p-4 hover:bg-[#36792c] flex items-center">
             <FiSettings size={20} className="mr-2" />
             {isOpen && 'Settings'}
           </li>
@@ -106,7 +106,7 @@ const Sidebar: React.FC = () => {
       {/* Logout Button */}
       <button
         onClick={handleLogout}
-        className="p-4 hover:bg-gray-700 flex items-center"
+        className="p-4 hover:bg-[#36792c] flex items-center"
       >
         <FiLogOut size={20} className="mr-2" />
         {isOpen && 'Logout'}

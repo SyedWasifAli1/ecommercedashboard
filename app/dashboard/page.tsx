@@ -92,20 +92,20 @@ export default function Dashboard() {
     async function fetchOrdersCount() {
       try {
         const categorySnapshot = await getDocs(collection(firestore, "orders"));
-        let totalSubCategories = 0;
+        let totalorder = 0;
 
         // For each category, fetch its subcategories
         for (const categoryDoc of categorySnapshot.docs) {
           const categoryId = categoryDoc.id;
           const subCategorySnapshot = await getDocs(collection(firestore, `orders/${categoryId}/user_orders`));
-          totalSubCategories += subCategorySnapshot.size; // Add the count of subcategories for this category
+          totalorder += subCategorySnapshot.size; // Add the count of subcategories for this category
         }
 
-        setOrdersCount(totalSubCategories); // Set the total subcategories count
-        setLoadingSubCategories(false);
+        setOrdersCount(totalorder); // Set the total subcategories count
+        setLoadingOrders(false);
       } catch (error) {
         console.error("Error fetching subcategories count:", error);
-        setLoadingSubCategories(false);
+        setLoadingOrders(false);
       }
     }
     
@@ -153,6 +153,15 @@ export default function Dashboard() {
             <p>Loading subcategories...</p>
           ) : (
             <p className="text-lg font-semibold">Total Sub Categories: {allSubCategoriesCount}</p>
+          )}
+        </div>
+      
+        <div className="bg-gray-200 p-4 rounded">
+          <h2 className="text-xl font-bold mb-2">All Orders</h2>
+          {loadingOrders ? (
+            <p>Loading All Orders...</p>
+          ) : (
+            <p className="text-lg font-semibold">Total Sub Categories: {ordersCount}</p>
           )}
         </div>
       

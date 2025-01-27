@@ -1,6 +1,7 @@
 "use client";
 import Image from 'next/image';
 import { useEffect, useState } from "react";
+import * as XLSX from "xlsx"
 import {
   collection,
   getDocs,
@@ -8,6 +9,7 @@ import {
   collectionGroup,
   updateDoc,
   where,
+  Timestamp,
 } from "firebase/firestore";
 import { firestore } from "../../lib/firebase-config";
 import { FiPrinter } from "react-icons/fi";
@@ -33,6 +35,7 @@ interface Order {
   orderId: string;
   userId: string;
   status: string;
+  datetime:string;
   totalPrice: number;
   products: Product[];
   userEmail: string;
@@ -46,7 +49,10 @@ export default function Orders() {
   const [loading, setLoading] = useState(true);
   const [selectedItems, setSelectedItems] = useState<Product[]>([]);
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryDetails | null>(null);
-
+  const [filterOrderId, setFilterOrderId] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterStartDate, setFilterStartDate] = useState("");
+const [filterEndDate, setFilterEndDate] = useState("");
   // Fetch emails from the custom API
   async function fetchEmails(): Promise<{ [userId: string]: string }> {
     try {
@@ -83,10 +89,16 @@ export default function Orders() {
         const ordersData: Order[] = querySnapshot.docs.map((orderDoc) => {
           const orderData = orderDoc.data();
           const userId = orderDoc.ref.parent.parent?.id || "Unknown User";
-
+          const datetime = orderData.datetime
+          ? orderData.datetime instanceof Timestamp
+            ? orderData.datetime.toDate().toLocaleDateString("en-CA") // Extract local date in YYYY-MM-DD format
+            : new Date(orderData.datetime).toLocaleDateString("en-CA") // Handle string case if needed
+          : "Unknown";
+        
           return {
             orderId: orderDoc.id,
             userId,
+            datetime,
             userEmail: emailMap[userId] || "No Email",
             status: orderData.status || "Unknown",
             totalPrice: orderData.totalPrice || 0,
@@ -108,6 +120,12 @@ export default function Orders() {
     fetchOrders();
   }, []);
 
+  const isWithinDateRange = (orderDate: string) => {
+    const orderTimestamp = new Date(orderDate).getTime();
+    const startTimestamp = filterStartDate ? new Date(filterStartDate).getTime() : -Infinity;
+    const endTimestamp = filterEndDate ? new Date(filterEndDate).getTime() : Infinity;
+    return orderTimestamp >= startTimestamp && orderTimestamp <= endTimestamp;
+  };
  
   const setSelectedproducts = async (productsWithQuantities: { id: string; quantity: number }[]) => {
     try {
@@ -201,7 +219,19 @@ export default function Orders() {
 
 
 
-
+  const exportToExcel = () => {
+    const ws = XLSX.utils.json_to_sheet(
+      orders.filter(
+        (order) =>
+          (filterOrderId === "" || order.orderId.toLowerCase().includes(filterOrderId.toLowerCase()) || order.userEmail.includes(filterOrderId)) &&
+          (filterStatus === "" || order.status === filterStatus) &&
+          isWithinDateRange(order.datetime)
+      )
+    );
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Orders");
+    XLSX.writeFile(wb, "orders_report.xlsx");
+  };
 
 
   const handlePrintOrderSlip = (order: Order) => {
@@ -318,74 +348,140 @@ export default function Orders() {
   return (
     <div className="h-[80vh]  text-black-200 p-8">
       <h1 className="text-3xl font-bold mb-8">All Users Orders</h1>
-      {loading ? (
-        <p className="text-center">Loading...</p>
-      ) : orders.length === 0 ? (
-        <p className="text-center">No orders found.</p>
-      ) : (
-        <div className="overflow-x-auto h-[60vh] overflow-y-auto">
-          <table className="table-auto w-full border-collapse border border-white">
-            <thead>
-              <tr className="bg-white">
-                <th className="border border-gray-700 px-4 py-2">Order ID</th>
-                <th className="border border-gray-700 px-4 py-2">User Email</th>
-                <th className="border border-gray-700 px-4 py-2">Contact</th>
-                <th className="border border-gray-700 px-4 py-2">City</th>
-                <th className="border border-gray-700 px-4 py-2">Status</th>
-                <th className="border border-gray-700 px-4 py-2">Total Price</th>
-                <th className="border border-gray-700 px-4 py-2">Items Count</th>
-                <th className="border border-gray-700 px-4 py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((order) => (
-                <tr key={order.orderId} className="hover:bg-gray-100">
-                  <td className="border border-gray-700 px-4 py-2">{order.orderId}</td>
-                  <td className="border border-gray-700 px-4 py-2">{order.userEmail}</td>
-                  <td className="border border-gray-700 px-4 py-2">{order.contactNumber}</td>
-                  <td className="border border-gray-700 px-4 py-2">{order.city}</td>
-                  <td className="border border-gray-700 px-4 py-2">
-                    <select
-                      className="bg-gray-500 text-white px-2 py-1 rounded"
-                      value={order.status}
-                      onChange={(e) => handleUpdateStatus(order.orderId, e.target.value)}
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Shipped">Shipped</option>
-                      <option value="Delivered">Delivered</option>
-                      <option value="Cancelled">Cancelled</option>
-                    </select>
-                  </td>
-                  <td className="border border-gray-700 px-4 py-2">PKR:{order.totalPrice}</td>
-                  <td className="border border-gray-700 px-4 py-2">{order.products.length}</td>
-                  <td className="border border-gray-700 px-4 py-2 space-y-2">
-                    <button
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-                      onClick={() => handleShowItems(order)}
-                    >
-                      View Items
-                    </button>
-                    <button
-                      className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
-                      onClick={() => handleShowDeliveryDetails(order.deliveryDetails)}
-                    >
-                      View Delivery
-                    </button>
+      <button
+                  className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded"
+                  onClick={() => exportToExcel()}
+                >
+                  <FiPrinter size={20} style={{ marginRight: "5px" }} />
+                </button>
+      <div className="mb-4 flex flex-wrap gap-4">
+  <div className="flex-1 min-w-[200px]">
+    <label htmlFor="orderId" className="block text-sm font-medium text-gray-700">Order ID And User Email</label>
+    <input
+      type="text"
+      id="orderId"
+      value={filterOrderId}
+      onChange={(e) => setFilterOrderId(e.target.value)}
+      className="w-full border border-gray-300 p-2 rounded-md"
+    />
+  </div>
 
-                    <button
-                      className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded"
-                      onClick={() => handlePrintOrderSlip(order)}
-                    >
-                        <FiPrinter size={20} style={{ marginRight: "5px" }} />
-                    </button>
-                   
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+  <div className="flex-1 min-w-[200px]">
+    <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status:</label>
+    <select
+      id="status"
+      value={filterStatus}
+      onChange={(e) => setFilterStatus(e.target.value)}
+      className="w-full border border-gray-300 p-2 rounded-md"
+    >
+      <option value="">All</option>
+      <option value="Pending">Pending</option>
+      <option value="Shipped">Shipped</option>
+      <option value="Delivered">Delivered</option>
+      <option value="Cancelled">Cancelled</option>
+    </select>
+  </div>
+
+  <div className="flex-1 min-w-[200px]">
+    <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">Start Date:</label>
+    <input
+      type="date"
+      id="startDate"
+      value={filterStartDate}
+      onChange={(e) => setFilterStartDate(e.target.value)}
+      className="w-full border border-gray-300 p-2 rounded-md"
+    />
+  </div>
+
+  <div className="flex-1 min-w-[200px]">
+    <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">End Date:</label>
+    <input
+      type="date"
+      id="endDate"
+      value={filterEndDate}
+      onChange={(e) => setFilterEndDate(e.target.value)}
+      className="w-full border border-gray-300 p-2 rounded-md"
+    />
+  </div>
+</div>
+
+
+      {loading ? (
+  <p className="text-center">Loading...</p>
+) : orders.length === 0 ? (
+  <p className="text-center">No orders found.</p>
+) : (
+  <div className="overflow-x-auto h-[60vh] overflow-y-auto">
+    <table className="table-auto w-full border-collapse border border-white">
+      <thead>
+        <tr className="bg-white">
+          <th className="border border-gray-700 px-4 py-2">Order ID</th>
+          <th className="border border-gray-700 px-4 py-2">User Email</th>
+          <th className="border border-gray-700 px-4 py-2">Contact</th>
+          <th className="border border-gray-700 px-4 py-2">City</th>
+          <th className="border border-gray-700 px-4 py-2">Date</th>
+          <th className="border border-gray-700 px-4 py-2">Status</th>
+          <th className="border border-gray-700 px-4 py-2">Total Price</th>
+          <th className="border border-gray-700 px-4 py-2">Items Count</th>
+          <th className="border border-gray-700 px-4 py-2">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {orders
+          .filter(
+            (order) =>
+              (filterOrderId === "" || order.orderId.toLowerCase().includes(filterOrderId.toLowerCase()) || order.userEmail.includes(filterOrderId)) &&
+              (filterStatus === "" || order.status === filterStatus) &&
+              isWithinDateRange(order.datetime) 
+          )
+          .map((order) => (
+            <tr key={order.orderId} className="hover:bg-gray-100">
+              <td className="border border-gray-700 px-4 py-2">{order.orderId}</td>
+              <td className="border border-gray-700 px-4 py-2">{order.userEmail}</td>
+              <td className="border border-gray-700 px-4 py-2">{order.contactNumber}</td>
+              <td className="border border-gray-700 px-4 py-2">{order.city}</td>
+              <td className="border border-gray-700 px-4 py-2">{order.datetime}</td>
+              <td className="border border-gray-700 px-4 py-2">
+                <select
+                  className="bg-gray-500 text-white px-2 py-1 rounded"
+                  value={order.status}
+                  onChange={(e) => handleUpdateStatus(order.orderId, e.target.value)}
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Shipped">Shipped</option>
+                  <option value="Delivered">Delivered</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </td>
+              <td className="border border-gray-700 px-4 py-2">PKR:{order.totalPrice}</td>
+              <td className="border border-gray-700 px-4 py-2">{order.products.length}</td>
+              <td className="border border-gray-700 px-4 py-2 space-y-2">
+                <button
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                  onClick={() => handleShowItems(order)}
+                >
+                  View Items
+                </button>
+                <button
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+                  onClick={() => handleShowDeliveryDetails(order.deliveryDetails)}
+                >
+                  View Delivery
+                </button>
+                <button
+                  className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded"
+                  onClick={() => handlePrintOrderSlip(order)}
+                >
+                  <FiPrinter size={20} style={{ marginRight: "5px" }} />
+                </button>
+              </td>
+            </tr>
+          ))}
+      </tbody>
+    </table>
+  </div>
+)}
+
 
       {/* Modal for displaying items */}
     
