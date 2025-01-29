@@ -1,7 +1,7 @@
 "use client";
 import Image from 'next/image';
 import { useEffect, useState } from "react";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx"
 import {
   collection,
   getDocs,
@@ -350,12 +350,11 @@ const [filterEndDate, setFilterEndDate] = useState("");
     <div className="h-[80vh]  text-black-200 p-8">
       <h1 className="text-3xl font-bold mb-8">All Users Orders</h1>
       <button
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+                  className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded"
                   onClick={() => exportToExcel()}
                 >
                   Convert to Excel Report
                 </button>
-                
       <div className="mb-4 flex flex-wrap gap-4">
   <div className="flex-1 min-w-[200px]">
     <label htmlFor="orderId" className="block text-sm font-medium text-gray-700">Order ID And User Email</label>
