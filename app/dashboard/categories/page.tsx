@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { firestore,auth } from "../../lib/firebase-config";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import * as XLSX from "xlsx";
 import {
   collection,
   addDoc,
@@ -33,7 +34,7 @@ const Categories = () => {
   const [isSubModalOpen, setIsSubModalOpen] = useState(false);
   const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-
+  const [filterName, setFilterName] = useState("");
   const [Loading, setLoading] = useState(true);// Fetch categories from Firestore
   const router = useRouter();
   const fetchCategories = async () => {
@@ -188,11 +189,43 @@ useEffect(() => {
     setCategoryName(category.name);
     setEditingCategory(category);
   };
-
+ const exportToExcel = () => {
+    const ws = XLSX.utils.json_to_sheet(
+      categories.filter(
+        (categories) =>
+          (filterName === "" || categories.name.toLowerCase().includes(filterName.toLowerCase())) 
+      )
+    );
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Category");
+    XLSX.writeFile(wb, "category.xlsx");
+  };
  
   return (
     // <div className="p-6 bg-gray-900 text-gray-200 h-[80vh] ">
     <div className="p-0 text-black h-[80vh] ">
+         <button
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+                  onClick={() => exportToExcel()}
+                >
+                  Convert to Excel Report
+                </button>
+    
+<div className="mb-4 flex flex-wrap gap-4">
+  <div className="flex-1 min-w-[200px]">
+    <label htmlFor="orderId" className="block text-sm font-medium text-gray-700">Category Name </label>
+    <input
+      type="text"
+      placeholder="Search by Category Name"
+      id="orderId"
+      value={filterName}
+      onChange={(e) => setFilterName(e.target.value)}
+      className="w-full border border-gray-300 p-2 rounded-md"
+    />
+  </div>
+
+  
+</div>
 
 
 
@@ -225,7 +258,10 @@ useEffect(() => {
     </tr>
   </thead>
   <tbody>
-    {categories.map((category) => (
+    {categories .filter(
+                    (categories) =>
+                      (filterName === "" || categories.name.toLowerCase().includes(filterName.toLowerCase()))
+                  ).map((category) => (
       <tr
         key={category.id}
         className="even:bg-gray-200 odd:bg-gray-300 cursor-pointer"

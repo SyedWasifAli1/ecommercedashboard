@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // "use client";
 
 // import { useState } from "react";
@@ -743,7 +744,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { collection, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc, updateDoc, Timestamp } from "firebase/firestore";
+import * as XLSX from "xlsx";
 import { firestore } from "../../lib/firebase-config";
 import Image from "next/image";
 
@@ -755,6 +757,7 @@ interface Product {
   stock: number;
   category: string;
   sub_category: string;
+  create_date:string;
   images1?: string[]; // Array of image Base64 strings
 }
 
@@ -772,6 +775,19 @@ export default function Products() {
   // const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
+  const [filterProductName, setFilterProductsName] = useState("");
+  const [filterStartDate, setFilterStartDate] = useState("");
+const [filterEndDate, setFilterEndDate] = useState("");
+
+
+const isWithinDateRange = (orderDate: string) => {
+  const orderTimestamp = new Date(orderDate).getTime();
+  const startTimestamp = filterStartDate ? new Date(filterStartDate).getTime() : -Infinity;
+  const endTimestamp = filterEndDate ? new Date(filterEndDate).getTime() : Infinity;
+  return orderTimestamp >= startTimestamp && orderTimestamp <= endTimestamp;
+};
+
+
   const fetchCategories = async () => {
     const categorySnapshot = await getDocs(collection(firestore, "category"));
     const categoryData: Category[] = categorySnapshot.docs.map((doc) => ({
@@ -797,10 +813,18 @@ export default function Products() {
       const querySnapshot = await getDocs(collection(firestore, "products"));
       const productsData: Product[] = querySnapshot.docs.map((doc) => {
         const data = doc.data() as Omit<Product, "id">;
+        const create_date =
+        data.create_date && typeof data.create_date === "object" && "toDate" in data.create_date
+          ? (data.create_date as Timestamp).toDate().toLocaleDateString("en-CA")
+          : data.create_date
+          ? new Date(data.create_date).toLocaleDateString("en-CA")
+          : "Unknown";// Default if `create_date` is missing
+  
         return {
           id: doc.id,
           ...data,
-          images1: data.images1 || [], // Default to an empty array if missing
+          create_date, // Include the formatted date
+          images1: data.images1 || [], // Default to empty array
         };
       });
       setProducts(productsData);
@@ -810,6 +834,7 @@ export default function Products() {
       setLoading(false);
     }
   }, []);
+  
 
   useEffect(() => {
     fetchProducts();
@@ -817,6 +842,35 @@ export default function Products() {
   }, [fetchProducts]);
 
 
+
+
+  const exportToExcel = () => {
+    // Map products and replace category_id and subcategory_id with names
+    const dataForExport = products
+      .filter(
+        (product) =>
+          (filterProductName === "" ||
+            product.name.toLowerCase().includes(filterProductName.toLowerCase())) &&
+          isWithinDateRange(product.create_date)
+      )
+      .map((product) => ({
+        ...product,
+        category_name: resolveCategoryName(product.category), // Resolve category name
+        subcategory_name: resolveSubCategoryName(product.sub_category), // Resolve subcategory name
+      }));
+  
+    // Remove original category_id and subcategory_id
+    const dataWithNames = dataForExport.map(({ category, sub_category, ...rest }) => rest);
+  
+    // Convert to Excel sheet
+    const ws = XLSX.utils.json_to_sheet(dataWithNames);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Products");
+  
+    // Write file
+    XLSX.writeFile(wb, "products_report.xlsx");
+  };
+  
   const handleCheckboxChange = (id: string) => {
     setSelectedProducts((prev) => {
       const updatedSet = new Set(prev);
@@ -868,6 +922,11 @@ export default function Products() {
   //     prev.includes(id) ? prev.filter((productId) => productId !== id) : [...prev, id]
   //   );
   // };
+
+
+
+
+  
   const handleDelete = async (id: string) => {
     try {
       await deleteDoc(doc(firestore, "products", id));
@@ -907,6 +966,51 @@ export default function Products() {
   return (
     <div className="h-[80vh] text-black p-8">
       <h1 className="text-3xl font-bold mb-8 text-center">Products List</h1>
+      <button
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+                  onClick={() => exportToExcel()}
+                >
+                  Convert to Excel Report
+                </button>
+                
+      <div className="mb-4 flex flex-wrap gap-4">
+  <div className="flex-1 min-w-[200px]">
+    <label htmlFor="orderId" className="block text-sm font-medium text-gray-700">Products Name</label>
+    <input
+    placeholder="Search By Products Name"
+      type="text"
+      id="orderId"
+      value={filterProductName}
+      onChange={(e) => setFilterProductsName(e.target.value)}
+      className="w-full border border-gray-300 p-2 rounded-md"
+    />
+  </div>
+
+
+  <div className="flex-1 min-w-[200px]">
+    <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">Start Date:</label>
+    <input
+      type="date"
+      id="startDate"
+      value={filterStartDate}
+      onChange={(e) => setFilterStartDate(e.target.value)}
+      className="w-full border border-gray-300 p-2 rounded-md"
+    />
+  </div>
+
+  <div className="flex-1 min-w-[200px]">
+    <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">End Date:</label>
+    <input
+      type="date"
+      id="endDate"
+      value={filterEndDate}
+      onChange={(e) => setFilterEndDate(e.target.value)}
+      className="w-full border border-gray-300 p-2 rounded-md"
+    />
+  </div>
+</div>
+
+
       {loading ? (
         <p className="text-center">Loading...</p>
       ) : products.length === 0 ? (
@@ -936,7 +1040,14 @@ export default function Products() {
               </tr>
             </thead>
             <tbody>
-              {products.map((product) => (
+              {products
+             .filter(
+              (product) =>
+                (filterProductName === "" || 
+                product.name.toLowerCase().includes(filterProductName.toLowerCase())) &&
+                isWithinDateRange(product.create_date)
+            )
+          .map((product) => (
                 <tr
                   key={product.id}
                   className="hover:bg-gray-100 transition duration-150 ease-in-out"

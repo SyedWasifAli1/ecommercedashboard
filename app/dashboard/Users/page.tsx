@@ -1,40 +1,124 @@
 "use client";
 import { useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, Timestamp } from "firebase/firestore";
 import { firestore } from "../../lib/firebase-config"; // Update the path to your Firebase config
-
+import * as XLSX from "xlsx";
 interface Customer {
   id: string;
   email: string;
+  datetime:string;
 }
 
 export default function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterEmail, setFilterEmail] = useState("");
+  const [filterStartDate, setFilterStartDate] = useState("");
+const [filterEndDate, setFilterEndDate] = useState("");
 
   // Fetch customers from Firestore
   useEffect(() => {
     async function fetchCustomers() {
       try {
         const querySnapshot = await getDocs(collection(firestore, "customers")); // Fetch 'customers' collection
-        const customerData = querySnapshot.docs.map((doc) => ({
-          id: doc.id, // Get document ID
-          email: doc.data().email, // Get email from document data
-        }));
+        
+        const customerData = querySnapshot.docs.map((doc) => {
+          const data = doc.data();
+          const datetime = data.datetime
+            ? data.datetime instanceof Timestamp
+              ? data.datetime.toDate().toLocaleDateString("en-CA") // Extract local date in YYYY-MM-DD format
+              : new Date(data.datetime).toLocaleDateString("en-CA") // Handle string case if needed
+            : "Unknown"; // Default value if datetime is not available
+      
+          return {
+            id: doc.id, // Get document ID
+            email: data.email, // Get email from document data
+            datetime, // Processed datetime field
+          };
+        });
+        
         setCustomers(customerData);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching customers:", error);
         setLoading(false);
       }
+      
     }
 
     fetchCustomers();
   }, []);
 
+ const exportToExcel = () => {
+    const ws = XLSX.utils.json_to_sheet(
+      customers.filter(
+        (customer) =>
+          (filterEmail === "" || customer.email.includes(filterEmail)) &&
+        isWithinDateRange(customer.datetime) 
+      )
+    );
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Users");
+    XLSX.writeFile(wb, "users_report.xlsx");
+  };
+
+
+
+  const isWithinDateRange = (orderDate: string) => {
+    const orderTimestamp = new Date(orderDate).getTime();
+    const startTimestamp = filterStartDate ? new Date(filterStartDate).getTime() : -Infinity;
+    const endTimestamp = filterEndDate ? new Date(filterEndDate).getTime() : Infinity;
+    return orderTimestamp >= startTimestamp && orderTimestamp <= endTimestamp;
+  };
   return (
     <div className="h-[80vh]  text-gray-800 p-8">
       <h1 className="text-3xl font-bold mb-4">Customer List</h1>
+
+      <button
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+                  onClick={() => exportToExcel()}
+                >
+                  Convert to Excel Report
+                </button>       
+    
+
+
+<div className="mb-4 flex flex-wrap gap-4">
+  <div className="flex-1 min-w-[200px]">
+    <label htmlFor="orderId" className="block text-sm font-medium text-gray-700">User Email</label>
+    <input
+      type="text"
+      placeholder="Search By Email"
+      id="orderId"
+      value={filterEmail}
+      onChange={(e) => setFilterEmail(e.target.value)}
+      className="w-full border border-gray-300 p-2 rounded-md"
+    />
+  </div>
+
+  <div className="flex-1 min-w-[200px]">
+    <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">Start Date:</label>
+    <input
+      type="date"
+      id="startDate"
+      value={filterStartDate}
+      onChange={(e) => setFilterStartDate(e.target.value)}
+      className="w-full border border-gray-300 p-2 rounded-md"
+    />
+  </div>
+
+  <div className="flex-1 min-w-[200px]">
+    <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">End Date:</label>
+    <input
+      type="date"
+      id="endDate"
+      value={filterEndDate}
+      onChange={(e) => setFilterEndDate(e.target.value)}
+      className="w-full border border-gray-300 p-2 rounded-md"
+    />
+  </div>
+</div>
+
 
       {loading ? (
         <p className="text-center">Loading...</p>
@@ -53,7 +137,14 @@ export default function Customers() {
                   </tr>
                 </thead>
                 <tbody>
-                  {customers.map((customer) => (
+                  {customers
+                  .filter(
+                    (customer) =>
+                      (filterEmail === "" || customer.email.includes(filterEmail)) &&
+                    isWithinDateRange(customer.datetime) 
+                      // (filterStatus === "" || order.status === filterStatus) &&
+                  )
+                  .map((customer) => (
                     <tr key={customer.id} className="hover:bg-gray-100">
                       <td className="border border-gray-300 px-4 py-2">{customer.id}</td>
                       <td className="border border-gray-300 px-4 py-2">{customer.email}</td>
