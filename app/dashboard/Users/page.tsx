@@ -74,12 +74,7 @@ const [filterEndDate, setFilterEndDate] = useState("");
     <div className="h-[80vh]  text-gray-800 p-8">
       <h1 className="text-3xl font-bold mb-4">Customer List</h1>
 
-      <button
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
-                  onClick={() => exportToExcel()}
-                >
-                  Convert to Excel Report
-                </button>       
+           
     
 
 
@@ -116,6 +111,16 @@ const [filterEndDate, setFilterEndDate] = useState("");
       onChange={(e) => setFilterEndDate(e.target.value)}
       className="w-full border border-gray-300 p-2 rounded-md"
     />
+  </div>
+
+  <div className="flex-1 min-w-[200px]">
+    <label htmlFor="orderId" className="block text-sm font-medium text-gray-700">Export Data</label>
+    <button
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+                  onClick={() => exportToExcel()}
+                >
+                  Convert to Excel Report
+                </button> 
   </div>
 </div>
 

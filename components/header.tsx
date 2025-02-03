@@ -2,7 +2,7 @@
 import React from 'react';
 import { FiSearch, FiBell, FiUser } from 'react-icons/fi';
 import { usePathname } from 'next/navigation';
-
+import Image from "next/image";
 const Header: React.FC = () => {
   const pathname = usePathname();
 
@@ -14,8 +14,18 @@ const Header: React.FC = () => {
       {/* Dynamic Route Title with Split Styling */}
       <h1 className="text-xl font-bold capitalize">
         <span className="text-black">{routeTitle}</span>
-      </h1>
+      </h1> 
 
+
+      <div className="flex-grow flex justify-center">
+        <Image
+          src="/log.png" // Path to the logo in the public folder
+          alt="Logo"
+          width={120} // Adjust width as needed
+          height={40} // Adjust height as needed
+          className="object-contain" // Ensure the logo scales properly
+        />
+      </div>
       {/* Search Bar and Other Actions */}
       <div className="flex items-center gap-2">
         <div className="relative">

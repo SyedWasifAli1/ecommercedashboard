@@ -189,28 +189,31 @@ useEffect(() => {
     setCategoryName(category.name);
     setEditingCategory(category);
   };
- const exportToExcel = () => {
+  const exportToExcel = () => {
+    const fileName = prompt("Enter file name:", "category.xlsx"); // User se filename maangna
+  
+    if (!fileName) {
+      alert("File name is required!"); // Agar user cancel kare ya empty naam de to alert show karo
+      return;
+    }
+  
     const ws = XLSX.utils.json_to_sheet(
       categories.filter(
-        (categories) =>
-          (filterName === "" || categories.name.toLowerCase().includes(filterName.toLowerCase())) 
+        (category) =>
+          filterName === "" || category.name.toLowerCase().includes(filterName.toLowerCase())
       )
     );
+  
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Category");
-    XLSX.writeFile(wb, "category.xlsx");
+  
+    XLSX.writeFile(wb, `${fileName}.xlsx`); // User ke diye gaye naam se file save karna
   };
- 
+  
   return (
     // <div className="p-6 bg-gray-900 text-gray-200 h-[80vh] ">
     <div className="p-0 text-black h-[80vh] ">
-         <button
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
-                  onClick={() => exportToExcel()}
-                >
-                  Convert to Excel Report
-                </button>
-    
+     
 <div className="mb-4 flex flex-wrap gap-4">
   <div className="flex-1 min-w-[200px]">
     <label htmlFor="orderId" className="block text-sm font-medium text-gray-700">Category Name </label>
@@ -223,30 +226,43 @@ useEffect(() => {
       className="w-full border border-gray-300 p-2 rounded-md"
     />
   </div>
+  <div className="flex-1 min-w-[200px]">
+    <label htmlFor="orderId" className="block text-sm font-medium text-gray-700">Export Data</label>
+    <button
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+                  onClick={() => exportToExcel()}
+                >
+                  Convert to Excel Report
+                </button> 
+  </div>
+  <div className="flex-1 min-w-[200px]">
+  <label htmlFor="orderId" className="block text-sm font-medium text-gray-700">
+    Add New Category
+  </label>
+  <input
+  type="text"
+  value={categoryName}
+  onChange={(e) => setCategoryName(e.target.value)}
+  placeholder={categoryError ? categoryError : "Add New Category Name"}
+  className={`border border-gray-300 bg-gray-200 text-black rounded px-4 py-2 mr-2 w-1/2 focus:outline-none focus:ring focus:ring-gray-400 ${categoryError ? "input-error" : ""}`}
+/>
 
-  
+
+  <button
+    onClick={addCategory}
+    className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded"
+  >
+    {editingCategory ? "Update Category" : "Add Category"}
+  </button>
+</div>
+
+
+
 </div>
 
 
 
       {/* Add/Edit Category Form */}
-      <div className="mb-6">
-        <input
-          type="text"
-          value={categoryName}
-          onChange={(e) => setCategoryName(e.target.value)}
-          placeholder="Category Name"
-          className="border border-gray-300 bg-gray-200 text-black rounded px-4 py-2 mr-2 w-1/2 focus:outline-none focus:ring focus:ring-gray-400"
-        />
-        <button
-          onClick={addCategory}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          {editingCategory ? "Update Category" : "Add Category"}
-        </button>
-      </div>
-
-      {categoryError && <p className="text-red-500 mb-4">{categoryError}</p>}
 
       {/* Category Table */}
       <div className="overflow-x-auto h-[75vh] overflow-y-auto">
