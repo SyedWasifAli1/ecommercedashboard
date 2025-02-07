@@ -433,7 +433,7 @@ const OrdersChart = () => {
       <h1 className="text-3xl font-bold text-green-700 mb-6">Dashboard Overview</h1>
 
   
-        <p className="text-center text-lg font-semibold text-gray-700">Loading data...</p>
+{/*         <p className="text-center text-lg font-semibold text-gray-700">Loading data...</p> */}
       
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Bar Chart */}
